@@ -58,11 +58,16 @@ This document provides step-by-step instructions to deploy the **dev.hyd** web a
    JWT_SECRET=your_super_secret_jwt_key
    JWT_REFRESH_SECRET=your_super_secret_refresh_key
    ADMIN_EMAIL=dev.hyd.official@gmail.com
-   ADMIN_PASSWORD=your_secure_admin_password
+   ADMIN_PASSWORD=admin123
    NOTIFY_EMAIL=dev.hyd.official@gmail.com
    ```
-5. Railway will automatically build and deploy.
-6. Verify deployment by opening: `https://your-railway-app.up.railway.app/api/health`
+5. **Default Admin Login Credentials**:
+   - **Login URL**: `/admin/login`
+   - **Email**: `dev.hyd.official@gmail.com`
+   - **Password**: `admin123`
+   - *(Alternative)*: `admin@devhyd.com` (pass: `admin123`)
+6. Railway will automatically build and deploy.
+7. Verify deployment by opening: `https://your-railway-app.up.railway.app/api/health`
    - Expected response: `{"status":"ok","environment":"production",...}`
 
 ---

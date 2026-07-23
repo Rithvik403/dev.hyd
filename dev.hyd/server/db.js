@@ -18,18 +18,27 @@ export async function initDB() {
     await prisma.$connect()
     console.log('✅ Connected to PostgreSQL via Prisma')
 
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@devhyd.com'
-    const existingAdmin = await prisma.admin.findUnique({ where: { email: adminEmail } })
-    if (!existingAdmin) {
-      const hash = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'admin123', 10)
-      await prisma.admin.create({
-        data: {
-          email: adminEmail,
-          password: hash,
-          name: 'Admin'
-        }
-      })
-      console.log('✅ Admin seeded: ' + adminEmail)
+    // Ensure Admin accounts are seeded and ready for login
+    const adminAccounts = [
+      { email: 'dev.hyd.official@gmail.com', name: 'Dev.hyd Admin', pass: process.env.ADMIN_PASSWORD || 'admin123' },
+      { email: 'admin@devhyd.com', name: 'Admin', pass: 'admin123' },
+      { email: 'neelamrithvik@gmail.com', name: 'Rithvik Admin', pass: 'Rithvik@1909' }
+    ]
+
+    for (const acc of adminAccounts) {
+      const cleanEmail = acc.email.trim().toLowerCase()
+      const existing = await prisma.admin.findUnique({ where: { email: cleanEmail } })
+      if (!existing) {
+        const hash = await bcrypt.hash(acc.pass, 10)
+        await prisma.admin.create({
+          data: {
+            email: cleanEmail,
+            password: hash,
+            name: acc.name
+          }
+        })
+        console.log(`✅ Admin account seeded: ${cleanEmail}`)
+      }
     }
 
     const existingPost = await prisma.blogPost.findFirst({ where: { slug: 'why-local-business-needs-website' } })

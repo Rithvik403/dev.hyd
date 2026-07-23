@@ -3,29 +3,39 @@ import bcrypt from 'bcryptjs'
 import prisma from '../prisma.js'
 
 async function updateAdminCredentials() {
-  const newEmail = 'neelamrithvik@gmail.com'
-  const rawPassword = 'Rithvik@1909'
+  const adminAccounts = [
+    { email: 'dev.hyd.official@gmail.com', name: 'Dev.hyd Admin', pass: 'admin123' },
+    { email: 'neelamrithvik@gmail.com', name: 'Rithvik Admin', pass: 'Rithvik@1909' },
+    { email: 'admin@devhyd.com', name: 'Admin', pass: 'admin123' }
+  ]
 
   try {
-    console.log('🔄 Updating Admin Credentials in Database...')
-    const hashedPassword = await bcrypt.hash(rawPassword, 10)
+    console.log('🔄 Seeding / Resetting Admin Credentials in Database...')
 
-    // Delete any old admin records or update existing
-    await prisma.admin.deleteMany({})
-
-    const admin = await prisma.admin.create({
-      data: {
-        name: 'Rithvik (Admin)',
-        email: newEmail,
-        password: hashedPassword
+    for (const acc of adminAccounts) {
+      const cleanEmail = acc.email.trim().toLowerCase()
+      const hashedPassword = await bcrypt.hash(acc.pass, 10)
+      
+      const existing = await prisma.admin.findUnique({ where: { email: cleanEmail } })
+      if (existing) {
+        await prisma.admin.update({
+          where: { email: cleanEmail },
+          data: { password: hashedPassword }
+        })
+        console.log(`✅ Password updated for admin: ${cleanEmail}`)
+      } else {
+        await prisma.admin.create({
+          data: {
+            name: acc.name,
+            email: cleanEmail,
+            password: hashedPassword
+          }
+        })
+        console.log(`✅ Created admin: ${cleanEmail}`)
       }
-    })
+    }
 
-    console.log('✅ Admin credentials updated successfully!')
-    console.log(`👤 Name: ${admin.name}`)
-    console.log(`📧 Email: ${admin.email}`)
-    console.log(`🔑 Password set to: ${rawPassword}`)
-
+    console.log('🎉 Admin credentials sync completed!')
     process.exit(0)
   } catch (error) {
     console.error('❌ Error updating admin credentials:', error)
