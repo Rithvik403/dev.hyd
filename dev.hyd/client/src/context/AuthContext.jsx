@@ -48,6 +48,9 @@ export function AuthProvider({ children }) {
       const response = await authApi.adminLogin({ email, password })
       if (response.data.success) {
         const adminUser = response.data.user
+        if (response.data.token) {
+          localStorage.setItem('auth_token', response.data.token)
+        }
         setUser(adminUser)
         setRole('admin')
         setAdminViewing(false)
@@ -68,6 +71,9 @@ export function AuthProvider({ children }) {
       const response = await authApi.clientLogin({ email, password })
       if (response.data.success) {
         const clientUser = response.data.user
+        if (response.data.token) {
+          localStorage.setItem('auth_token', response.data.token)
+        }
         setUser(clientUser)
         setRole('client')
         setAdminViewing(false)
@@ -85,10 +91,12 @@ export function AuthProvider({ children }) {
   const logout = async () => {
     setLoading(true)
     try {
+      localStorage.removeItem('auth_token')
       await authApi.logout()
     } catch (err) {
       console.error('Logout error:', err)
     } finally {
+      localStorage.removeItem('auth_token')
       setUser(null)
       setRole(null)
       setAdminViewing(false)

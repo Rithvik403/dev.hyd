@@ -54,18 +54,20 @@ export async function adminLogin(req, res, next) {
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
+      path: '/',
       maxAge: 15 * 60 * 1000 // 15 mins
     })
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
+      path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     })
 
-    res.json({ success: true, user: payload })
+    res.json({ success: true, user: payload, token: accessToken })
   } catch (error) {
     next(error)
   }
@@ -88,18 +90,20 @@ export async function clientLogin(req, res, next) {
     res.cookie('accessToken', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
+      path: '/',
       maxAge: 15 * 60 * 1000 // 15 mins
     })
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
+      path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
     })
 
-    res.json({ success: true, user: payload })
+    res.json({ success: true, user: payload, token: accessToken })
   } catch (error) {
     next(error)
   }

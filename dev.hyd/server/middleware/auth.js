@@ -15,13 +15,19 @@ export function signRefreshToken(payload) {
 
 // Clear cookies helper
 export function clearAuthCookies(res) {
-  res.clearCookie('accessToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' })
-  res.clearCookie('refreshToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict' })
+  res.clearCookie('accessToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' })
+  res.clearCookie('refreshToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' })
 }
 
 // Authentication middleware
 export async function requireAuth(req, res, next) {
-  const { accessToken, refreshToken } = req.cookies || {}
+  let accessToken = req.cookies?.accessToken
+  let refreshToken = req.cookies?.refreshToken
+
+  // Fallback to Bearer token in Authorization header
+  if (!accessToken && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    accessToken = req.headers.authorization.split(' ')[1]
+  }
 
   // 1. Try to verify Access Token
   if (accessToken) {

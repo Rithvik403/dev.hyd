@@ -8,9 +8,15 @@ const apiClient = axios.create({
   }
 })
 
-// Request interceptor for logging/manipulations if needed
+// Request interceptor to attach Bearer token fallback if present
 apiClient.interceptors.request.use(
-  config => config,
+  config => {
+    const token = localStorage.getItem('auth_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
   error => Promise.reject(error)
 )
 

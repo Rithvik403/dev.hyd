@@ -27,9 +27,9 @@ export async function initDB() {
 
     for (const acc of adminAccounts) {
       const cleanEmail = acc.email.trim().toLowerCase()
+      const hash = await bcrypt.hash(acc.pass, 10)
       const existing = await prisma.admin.findUnique({ where: { email: cleanEmail } })
       if (!existing) {
-        const hash = await bcrypt.hash(acc.pass, 10)
         await prisma.admin.create({
           data: {
             email: cleanEmail,
@@ -38,6 +38,43 @@ export async function initDB() {
           }
         })
         console.log(`✅ Admin account seeded: ${cleanEmail}`)
+      } else {
+        // Ensure password is updated and matches
+        await prisma.admin.update({
+          where: { email: cleanEmail },
+          data: { password: hash }
+        })
+      }
+    }
+
+    // Ensure Client accounts are seeded and ready for login
+    const defaultClients = [
+      { name: 'Anjali Verma', email: 'anjali@salonstudio.com', phone: '9876543210', pass: 'Client123!' },
+      { name: 'Karthik Reddy', email: 'karthik@modernbistro.com', phone: '9876543211', pass: 'Client123!' },
+      { name: 'Neha Kapoor', email: 'neha@boutique.com', phone: '9876543212', pass: 'Client123!' },
+      { name: 'Dev Client', email: 'dev.hyd.official@gmail.com', phone: '7780252258', pass: 'Client123!' }
+    ]
+
+    for (const clientAcc of defaultClients) {
+      const cleanEmail = clientAcc.email.trim().toLowerCase()
+      const hash = await bcrypt.hash(clientAcc.pass, 10)
+      const existing = await prisma.client.findUnique({ where: { email: cleanEmail } })
+      if (!existing) {
+        await prisma.client.create({
+          data: {
+            name: clientAcc.name,
+            email: cleanEmail,
+            phone: clientAcc.phone,
+            password: hash,
+            verified: true
+          }
+        })
+        console.log(`✅ Default client account seeded: ${cleanEmail}`)
+      } else {
+        await prisma.client.update({
+          where: { email: cleanEmail },
+          data: { password: hash }
+        })
       }
     }
 
