@@ -118,7 +118,13 @@ export async function requireAuth(req, res, next) {
 // but never blocks the request (used by GET /api/auth/me so anonymous
 // visitors get a clean { admin: null, client: null } instead of a 401)
 export async function attachUserIfPresent(req, res, next) {
-  const { accessToken, refreshToken } = req.cookies || {}
+  let accessToken = req.cookies?.accessToken
+  let refreshToken = req.cookies?.refreshToken
+
+  // Fallback to Bearer token in Authorization header
+  if (!accessToken && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+    accessToken = req.headers.authorization.split(' ')[1]
+  }
 
   if (accessToken) {
     try {
@@ -152,8 +158,8 @@ export async function attachUserIfPresent(req, res, next) {
         res.cookie('accessToken', newAccessToken, {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
-          sameSite: 'strict',
-          maxAge: 15 * 60 * 1000
+          sameSite: 'lax',
+          path: '/'
         })
         req.user = newPayload
       }
