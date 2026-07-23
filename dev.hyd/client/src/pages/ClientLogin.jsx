@@ -18,7 +18,7 @@ export default function ClientLogin() {
     setLoading(true)
 
     try {
-      const res = await loginClient(email, password)
+      const res = await loginClient(email.trim(), password.trim())
       if (res.success) {
         toast.success('🎉 Welcome to your Client Portal!')
         navigate('/client')

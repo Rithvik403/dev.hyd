@@ -18,7 +18,7 @@ export default function AdminLogin() {
     setLoading(true)
 
     try {
-      const res = await loginAdmin(email, password)
+      const res = await loginAdmin(email.trim(), password.trim())
       if (res.success) {
         toast.success('👑 Welcome back, Admin!')
         navigate('/admin')

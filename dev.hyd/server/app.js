@@ -129,12 +129,14 @@ app.use(errorHandler)
 // Start Server
 const PORT = process.env.PORT || 3000
 
-initDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`\n🚀 Dev.hyd Backend API running at http://localhost:${PORT}`)
-    console.log(`🔒 Authentication API:  http://localhost:${PORT}/api/auth`)
-    console.log(`🌐 Public API:          http://localhost:${PORT}/api/public`)
-    console.log(`👤 Client Portal API:   http://localhost:${PORT}/api/client`)
-    console.log(`📊 Admin Dashboard API: http://localhost:${PORT}/api/admin\n`)
+app.listen(PORT, () => {
+  console.log(`\n🚀 Dev.hyd Backend API running at http://localhost:${PORT}`)
+  console.log(`🔒 Authentication API:  http://localhost:${PORT}/api/auth`)
+  console.log(`🌐 Public API:          http://localhost:${PORT}/api/public`)
+  console.log(`👤 Client Portal API:   http://localhost:${PORT}/api/client`)
+  console.log(`📊 Admin Dashboard API: http://localhost:${PORT}/api/admin\n`)
+
+  initDB().catch(err => {
+    console.error('⚠️ DB Initialization warning:', err.message || err)
   })
 })
