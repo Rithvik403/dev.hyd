@@ -23,7 +23,7 @@ export const validateContact = [
 
 // Login validators
 export const validateLogin = [
-  body('email').trim().isEmail().withMessage('Valid email is required').normalizeEmail(),
+  body('email').trim().isEmail().withMessage('Valid email is required').toLowerCase(),
   body('password').trim().notEmpty().withMessage('Password is required'),
   handleValidationErrors
 ]

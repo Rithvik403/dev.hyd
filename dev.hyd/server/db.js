@@ -19,8 +19,9 @@ export async function initDB() {
     console.log('✅ Connected to PostgreSQL via Prisma')
 
     // Ensure Admin accounts are seeded and ready for login
+    const adminPass = (process.env.ADMIN_PASSWORD || 'admin123').trim()
     const adminAccounts = [
-      { email: 'dev.hyd.official@gmail.com', name: 'Dev.hyd Admin', pass: process.env.ADMIN_PASSWORD || 'admin123' },
+      { email: 'dev.hyd.official@gmail.com', name: 'Dev.hyd Admin', pass: adminPass },
       { email: 'admin@devhyd.com', name: 'Admin', pass: 'admin123' },
       { email: 'neelamrithvik@gmail.com', name: 'Rithvik Admin', pass: 'Rithvik@1909' }
     ]
