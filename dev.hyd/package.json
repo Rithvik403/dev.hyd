@@ -1,0 +1,18 @@
+{
+  "name": "portfolio-app",
+  "version": "2.0.0",
+  "description": "Dev.hyd Portfolio — MERN stack (React client + Express/MongoDB API server)",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "install:all": "npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "server-dev": "npm run dev --prefix server",
+    "client-dev": "npm run dev --prefix client",
+    "build": "npm run build --prefix client",
+    "migrate": "npm run migrate --prefix server"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}

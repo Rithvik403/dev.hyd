@@ -1,0 +1,14 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+datasource db {
+  provider  = "postgresql"
+  DATABASE_URL="postgresql://postgres.xmmrwzzmoiemhkhvquth:[dev.hyd@2025]@aws-1-ap-south-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+  DIRECT_URL="postgresql://postgres.xmmrwzzmoiemhkhvquth:[dev.hyd@2025]@aws-1-ap-south-1.pooler.supabase.com:5432/postgres"
+}

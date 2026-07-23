@@ -1,0 +1,72 @@
+{
+  "enquiries": [
+    {
+      "id": "ee961f12-7d9d-442c-995c-1e1083dfcf8a",
+      "name": "Rithvik",
+      "business": "theofasions",
+      "phone": "7780252258",
+      "email": "honeybannu00@gmail.com",
+      "service": "Premium Website (₹15,000)",
+      "budget": "₹10,000 – ₹20,000",
+      "message": "vgbnmjnhbgvfghnjmk,",
+      "status": "new",
+      "created_at": "2026-06-29T20:49:34.627Z"
+    },
+    {
+      "id": "33fcae3d-9c3d-4f67-87c5-55729bb0dde2",
+      "name": "Test User",
+      "business": "",
+      "phone": "9876543210",
+      "email": "test@example.com",
+      "service": "Business Website (₹5,000)",
+      "budget": "Under ₹5,000",
+      "message": "",
+      "status": "new",
+      "created_at": "2026-07-02T10:29:59.423Z"
+    }
+  ],
+  "clients": [
+    {
+      "id": "59eb1588-c11d-4e4c-ae4c-75629f67b5a2",
+      "name": "Rithvik .N",
+      "email": "neelamrithvik8871@gmail.com",
+      "phone": "7780252258",
+      "password": "$2b$10$JB175/Xk3kkgmg65gmISS.eqmu/h.F1kWEu9/yNQHZVwSz9Qvp.gy",
+      "created_at": "2026-06-29T21:00:49.289Z"
+    }
+  ],
+  "projects": [
+    {
+      "id": "f6a87e56-d747-40dc-86ee-ce9a4e871ec7",
+      "client_id": "59eb1588-c11d-4e4c-ae4c-75629f67b5a2",
+      "title": "Test Project",
+      "description": "Testing routing",
+      "status": "Development",
+      "deadline": "2026-07-31",
+      "package": "Basic – ₹5,000",
+      "updates": [],
+      "created_at": "2026-07-01T07:49:55.814Z"
+    }
+  ],
+  "blog_posts": [
+    {
+      "id": "1749383e-dd25-4787-a25c-3aea258ba07c",
+      "title": "Why Every Local Business in Hyderabad Needs a Website",
+      "slug": "why-local-business-needs-website",
+      "excerpt": "Most customers search Google before visiting any shop. If you're not online, you're invisible to them.",
+      "content": "## The Reality in 2026\n\nOver 85% of people in Hyderabad search Google before visiting a local business. If your salon, boutique, or clinic doesn't have a website, you're losing customers every single day.\n\n## What a Website Does For You\n\n- **Gets found on Google** when someone searches \"salon near Financial District\"\n- **Builds trust** — customers feel more confident booking after seeing your services and prices online\n- **Works 24/7** — your website takes enquiries even while you sleep\n- **Beats competitors** who still rely only on word of mouth\n\n## How Much Does It Cost?\n\nA basic professional website starts at just ₹5,000 — less than one month's social media ad spend. And unlike ads, your website keeps working forever.\n\n## Ready to Get Started?\n\nI build websites for local businesses in Gowlidoddi, Nanakramguda and the Financial District area. [Contact me today](#contact) for a free demo in 2 days.",
+      "author": "Dev.hyd",
+      "published": true,
+      "created_at": "2026-06-29T20:34:39.944Z",
+      "cover": null
+    }
+  ],
+  "admins": [
+    {
+      "id": "f9febfca-2b6a-4d36-9a45-9f9afa178ef5",
+      "email": "your@email.com",
+      "password": "$2b$10$4V3r1pKtU/n5i7q7fWZ49OubaU8JdgdaiN443nbLAaUjAR5APnWze",
+      "name": "Admin"
+    }
+  ]
+}

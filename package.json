@@ -1,0 +1,11 @@
+{
+  "name": "dev-hyd-root",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "install:all": "npm run install:all --prefix dev.hyd",
+    "dev": "npm run dev --prefix dev.hyd",
+    "build": "npm run build --prefix dev.hyd"
+  }
+}

@@ -1,0 +1,216 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Admin {
+  id                   String    @id @default(uuid())
+  name                 String    @default("Admin")
+  email                String    @unique
+  password             String
+  resetPasswordToken   String?
+  resetPasswordExpires DateTime?
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+
+  @@map("admins")
+}
+
+model Client {
+  id                     String    @id @default(uuid())
+  name                   String
+  email                  String    @unique
+  phone                  String?
+  password               String
+  verified               Boolean   @default(false)
+  verificationToken      String?
+  verificationTokenExpires DateTime?
+  resetPasswordToken     String?
+  resetPasswordExpires   DateTime?
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+  projects               Project[]
+  messages               Message[]
+  notifications          Notification[]
+  payments               Payment[]
+
+  @@map("clients")
+}
+
+model Project {
+  id                 String    @id @default(uuid())
+  clientId           String    @map("client_id")
+  client             Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title              String
+  description        String?
+  status             String    @default("Discovery")
+  deadline           DateTime?
+  package            String?
+  updates            Json?     @default("[]")
+  files              Json?     @default("[]")
+  paymentStatus      String    @default("Unpaid") @map("payment_status")
+  paymentAmountTotal Decimal   @default(0) @map("payment_amount_total")
+  paymentAmountPaid  Decimal   @default(0) @map("payment_amount_paid")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+  messages           Message[]
+  payments           Payment[]
+
+  @@index([clientId])
+  @@map("projects")
+}
+
+model BlogPost {
+  id        String   @id @default(uuid())
+  title     String
+  slug      String   @unique
+  excerpt   String?
+  content   String
+  author    String   @default("Dev.hyd")
+  published Boolean  @default(false)
+  cover     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("blog_posts")
+}
+
+model Enquiry {
+  id        String   @id @default(uuid())
+  name      String
+  business  String?
+  phone     String
+  email     String?
+  service   String
+  budget    String?
+  message   String?
+  status    String   @default("new")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("enquiries")
+}
+
+model Testimonial {
+  id        String   @id @default(uuid())
+  name      String
+  text      String
+  business  String?
+  avatar    String?  @default("/images/avatar-default.png")
+  stars     Int      @default(5)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("testimonials")
+}
+
+model Service {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  price       String
+  icon        String?  @default("blue")
+  order       Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("services")
+}
+
+model Gallery {
+  id        String   @id @default(uuid())
+  title     String
+  image     String
+  tags      Json?    @default("[]")
+  category  String?  @default("Website")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("galleries")
+}
+
+model FAQ {
+  id        String   @id @default(uuid())
+  question  String
+  answer    String
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("faqs")
+}
+
+model WebsiteSettings {
+  id             String   @id @default(uuid())
+  key            String   @unique @default("global_settings")
+  siteName       String?  @default("dev.hyd")
+  seoTitle       String?  @default("dev.hyd — Web Development for Local Businesses in Hyderabad")
+  seoDescription String?  @default("Helping Hyderabad businesses get more customers with modern websites, WhatsApp bookings, and Google Search visibility.")
+  seoKeywords    String?  @default("web design Hyderabad, local business website, salon website, restaurant website")
+  socialLinks    Json?    @default("{}")
+  logo           String?
+  customContent  Json?    @default("{}")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("website_settings")
+}
+
+model Message {
+  id          String   @id @default(uuid())
+  clientId    String   @map("client_id")
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  projectId   String?  @map("project_id")
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  senderRole  String   @map("sender_role")
+  text        String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([clientId])
+  @@map("messages")
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  clientId    String   @map("client_id")
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  title       String
+  message     String
+  read        Boolean  @default(false)
+  type        String   @default("info")
+  link        String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@index([clientId])
+  @@map("notifications")
+}
+
+model Payment {
+  id                 String    @id @default(uuid())
+  projectId          String    @map("project_id")
+  project            Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  clientId           String    @map("client_id")
+  client             Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  label              String
+  amountDue          Decimal   @map("amount_due")
+  amountPaid         Decimal   @default(0) @map("amount_paid")
+  status             String    @default("pending")
+  razorpayOrderId    String?   @map("razorpay_order_id")
+  razorpayPaymentId  String?   @map("razorpay_payment_id")
+  razorpaySignature  String?   @map("razorpay_signature")
+  paidAt             DateTime? @map("paid_at")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@index([projectId])
+  @@index([clientId])
+  @@map("payments")
+}
