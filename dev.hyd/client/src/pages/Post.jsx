@@ -12,6 +12,7 @@ export default function Post() {
   const [submitted, setSubmitted] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [navOpen, setNavOpen] = useState(false)
   const { role } = useAuth()
 
   useEffect(() => {
@@ -89,16 +90,20 @@ export default function Post() {
 
   return (
     <>
-      <nav>
+      <nav className={navOpen ? 'nav-open' : ''}>
         <Link to="/" className="logo">dev<span>.</span>hyd</Link>
+        <button type="button" id="navToggle" aria-label="Toggle Navigation" onClick={() => setNavOpen(true)}>
+          <span></span><span></span><span></span>
+        </button>
         <div className="nav-links">
-          <Link to="/">Home</Link>
-          <a href="/#latest-blog">Blog</a>
-          <a href="/#contact">Contact</a>
+          <button type="button" id="navClose" aria-label="Close Navigation" onClick={() => setNavOpen(false)}>×</button>
+          <Link to="/" onClick={() => setNavOpen(false)}>Home</Link>
+          <a href="/#latest-blog" onClick={() => setNavOpen(false)}>Blog</a>
+          <a href="/#contact" onClick={() => setNavOpen(false)}>Contact</a>
           {role === 'admin' ? (
-            <Link to="/admin" className="nav-accent-link">Admin Dashboard</Link>
+            <Link to="/admin" className="nav-accent-link" onClick={() => setNavOpen(false)}>Admin Dashboard</Link>
           ) : role === 'client' ? (
-            <Link to="/client" className="nav-accent-link">My Project</Link>
+            <Link to="/client" className="nav-accent-link" onClick={() => setNavOpen(false)}>My Project</Link>
           ) : null}
         </div>
       </nav>

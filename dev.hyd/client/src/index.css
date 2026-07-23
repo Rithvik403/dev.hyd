@@ -6110,3 +6110,520 @@ footer {
 .auth-footer-links span {
   color: #cbd5e1;
 }
+
+/* ============================================================
+   COMPREHENSIVE RESPONSIVE STYLES — ALL DEVICE SIZES
+   Mobile First: 480px / 640px / 768px / 1024px / 1280px
+   ============================================================ */
+
+/* ─── Viewport Meta Safety ─── */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* ─── Large Tablets & Small Laptops (≤1100px) ─── */
+@media (max-width: 1100px) {
+  /* Public Nav */
+  nav:not(aside nav) {
+    padding: 1rem 5%;
+  }
+  nav:not(aside nav) .nav-links {
+    gap: 1.25rem;
+  }
+
+  /* Sections */
+  section {
+    padding: 4rem 5%;
+  }
+
+  /* Hero */
+  .hero-section {
+    padding: 7rem 5% 3rem;
+  }
+  .hero-container {
+    gap: 2.5rem;
+  }
+
+  /* Admin Layout */
+  .admin-main-wrapper-v3 {
+    margin-left: 280px;
+    width: calc(100% - 280px);
+    padding: 1rem 1.5rem 3rem;
+  }
+}
+
+/* ─── Tablets (≤1024px) ─── */
+@media (max-width: 1024px) {
+  /* Admin sidebar collapses */
+  .admin-main-wrapper-v3 {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding: 1rem 1.25rem 3rem;
+  }
+
+  /* Hero stacks vertically */
+  .hero-container {
+    flex-direction: column;
+    gap: 2rem;
+  }
+  .hero-left, .hero-right {
+    flex: 1;
+    width: 100%;
+  }
+  .hero-right {
+    justify-content: center;
+  }
+  .hero-subtitle {
+    max-width: 100%;
+  }
+
+  /* Services, Testimonials, Gallery grids */
+  .services-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .testimonials-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Dashboard stats */
+  .stats-grid,
+  .v3-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Tables — horizontal scroll */
+  .v3-table-wrapper,
+  .table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  table {
+    min-width: 600px;
+  }
+
+  /* Section padding */
+  section {
+    padding: 3.5rem 5%;
+  }
+}
+
+/* ─── Small Tablets & Large Phones (≤768px) ─── */
+@media (max-width: 768px) {
+  /* Nav padding tightens on mobile */
+  nav:not(aside nav) {
+    padding: 0.9rem 4%;
+  }
+  /* Hero section */
+  .hero-section {
+    padding-top: 6rem;
+    padding-bottom: 2.5rem;
+    padding-left: 4%;
+    padding-right: 4%;
+  }
+  .hero-title {
+    font-size: clamp(1.9rem, 6vw, 2.8rem);
+  }
+  .hero-subtitle {
+    font-size: 1rem;
+  }
+  .hero-features-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+  .hero-cta-group {
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+  }
+  .hero-cta-group .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Sections */
+  section {
+    padding: 3rem 4%;
+  }
+  .page-hero {
+    padding-top: 7rem;
+    padding-bottom: 2rem;
+  }
+
+  /* Section headings */
+  .section-title,
+  .section-heading {
+    font-size: clamp(1.5rem, 4vw, 2.2rem) !important;
+  }
+
+  /* Grid overrides */
+  .services-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .testimonials-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .gallery-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  .process-grid,
+  .portfolio-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Stats */
+  .stats-grid,
+  .v3-stats-grid {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  /* Calculator */
+  .calculator-body {
+    flex-direction: column !important;
+  }
+  .calculator-options {
+    width: 100% !important;
+  }
+  .calculator-result {
+    width: 100% !important;
+  }
+
+  /* Client Portal */
+  .client-portal-layout {
+    flex-direction: column !important;
+  }
+  .client-sidebar {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Admin Form Pages */
+  .form-grid-2col {
+    grid-template-columns: 1fr !important;
+  }
+  .form-grid-3col {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Auth pages */
+  .auth-page {
+    padding: 1rem;
+    min-height: 100vh;
+    align-items: flex-start;
+    padding-top: 2rem;
+  }
+  .auth-card-wrapper {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1.75rem 1.25rem !important;
+    border-radius: 16px !important;
+  }
+
+  /* Quick Lead Widget */
+  .quick-lead-widget {
+    bottom: 1rem !important;
+    right: 1rem !important;
+    left: 1rem !important;
+    width: auto !important;
+    max-width: 100% !important;
+  }
+
+  /* Blog grid */
+  .blog-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .blog-post-hero {
+    padding-top: 6rem;
+  }
+
+  /* Footer */
+  .footer-grid {
+    grid-template-columns: 1fr !important;
+    gap: 2rem !important;
+  }
+  .footer-bottom {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    text-align: center !important;
+  }
+
+  /* Project Tracker */
+  .tracker-layout {
+    flex-direction: column !important;
+  }
+  .tracker-search-panel {
+    width: 100% !important;
+  }
+  .tracker-result-panel {
+    width: 100% !important;
+  }
+  .milestone-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Card padding reduction */
+  .v3-card {
+    padding: 1.1rem !important;
+  }
+
+  /* Admin top nav */
+  .admin-top-nav,
+  .v3-topbar {
+    padding: 0.75rem 1rem !important;
+  }
+  .v3-topbar-title {
+    font-size: 1rem !important;
+  }
+
+  /* Project update form textarea */
+  .v3-textarea {
+    min-height: 80px;
+  }
+}
+
+/* ─── Mobile Phones (≤640px) ─── */
+@media (max-width: 640px) {
+  /* Base font sizing */
+  html {
+    font-size: 15px;
+  }
+
+  /* Hero features single col */
+  .hero-features-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.6rem;
+  }
+
+  /* Stats single col */
+  .stats-grid,
+  .v3-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Gallery single col */
+  .gallery-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Milestone grid single col */
+  .milestone-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Admin dashboard tabs scroll */
+  .v3-tab-nav,
+  .admin-tabs {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    white-space: nowrap;
+    padding-bottom: 4px;
+  }
+
+  /* Form padding */
+  .admin-page-container,
+  .form-page-wrapper {
+    padding: 0.75rem !important;
+  }
+
+  /* Client project view */
+  .project-stage-bar {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  .project-stage-step {
+    width: 100% !important;
+    text-align: left !important;
+  }
+
+  /* Table cells trim */
+  td, th {
+    padding: 0.65rem 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  /* Buttons full width in stacked contexts */
+  .btn-group-stack {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  .btn-group-stack .btn,
+  .btn-group-stack .v3-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* v3 Card header wrap */
+  .v3-card-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Section padding */
+  section {
+    padding: 2.5rem 4% !important;
+  }
+
+  /* Admin breadcrumb */
+  .breadcrumb {
+    font-size: 0.75rem !important;
+  }
+
+  /* Toast positioning */
+  .Toaster > div {
+    bottom: 1rem !important;
+    left: 1rem !important;
+    right: 1rem !important;
+    width: auto !important;
+  }
+}
+
+/* ─── Small Phones (≤480px) ─── */
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+
+  /* Nav logo size */
+  nav:not(aside nav) .logo {
+    font-size: 1.3rem;
+  }
+
+  /* Hero adjustments */
+  .hero-section {
+    padding-top: 5.5rem;
+  }
+  .hero-title {
+    font-size: clamp(1.6rem, 7vw, 2.2rem);
+    line-height: 1.18;
+  }
+  .hero-subtitle {
+    font-size: 0.9rem;
+  }
+  .hero-tag-badge {
+    font-size: 0.7rem;
+  }
+
+  /* Social proof strip */
+  .social-proof-strip {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    align-items: center !important;
+  }
+
+  /* Section headings */
+  .section-title,
+  .section-heading {
+    font-size: 1.4rem !important;
+  }
+
+  /* Auth card */
+  .auth-card-wrapper {
+    padding: 1.25rem 1rem !important;
+    border-radius: 12px !important;
+  }
+  .auth-header h2 {
+    font-size: 1.2rem !important;
+  }
+
+  /* Admin form inputs */
+  .v3-input, .v3-select {
+    font-size: 0.85rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  /* Admin action buttons row */
+  .v3-actions-row {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+  .v3-actions-row .v3-btn {
+    font-size: 0.75rem !important;
+    padding: 0.45rem 0.75rem !important;
+  }
+
+  /* Preloader */
+  .preloader-logo {
+    font-size: 2rem !important;
+  }
+  .preloader-subtitle {
+    font-size: 0.75rem !important;
+  }
+
+  /* Card padding */
+  .v3-card {
+    padding: 0.9rem !important;
+    border-radius: 14px !important;
+  }
+
+  /* Project file list */
+  .project-file-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.5rem !important;
+  }
+}
+
+/* ─── Landscape phones (narrow height) ─── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .auth-page {
+    min-height: auto;
+    padding: 1rem;
+  }
+  .auth-card-wrapper {
+    padding: 1rem 1.25rem !important;
+    margin: auto;
+  }
+  nav:not(aside nav) .nav-links {
+    gap: 1.25rem;
+    overflow-y: auto;
+  }
+}
+
+/* ─── Touch device tap targets ─── */
+@media (pointer: coarse) {
+  .v3-btn, .btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .nav-links a {
+    padding: 0.5rem 0.5rem;
+  }
+  input, select, textarea {
+    min-height: 44px;
+  }
+}
+
+/* ─── Wide Screens (≥1440px) ─── */
+@media (min-width: 1440px) {
+  nav:not(aside nav) {
+    padding: 1.25rem max(8%, calc((100% - 1400px) / 2));
+  }
+  section {
+    padding: 5rem max(8%, calc((100% - 1400px) / 2));
+  }
+  .hero-section {
+    padding-left: max(8%, calc((100% - 1400px) / 2));
+    padding-right: max(8%, calc((100% - 1400px) / 2));
+  }
+}
+
+/* ─── Print styles ─── */
+@media print {
+  nav, #navToggle, .quick-lead-widget,
+  .admin-sidebar, .v3-sidebar, footer {
+    display: none !important;
+  }
+  .admin-main-wrapper-v3 {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+  body {
+    background: white;
+    color: black;
+    font-size: 12pt;
+  }
+}

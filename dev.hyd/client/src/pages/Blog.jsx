@@ -7,6 +7,7 @@ export default function Blog() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [navOpen, setNavOpen] = useState(false)
   const { user, role } = useAuth()
 
   useEffect(() => {
@@ -31,18 +32,22 @@ export default function Blog() {
 
   return (
     <>
-      <nav>
+      <nav className={navOpen ? 'nav-open' : ''}>
         <Link to="/" className="logo">dev<span>.</span>hyd</Link>
+        <button type="button" id="navToggle" aria-label="Toggle Navigation" onClick={() => setNavOpen(true)}>
+          <span></span><span></span><span></span>
+        </button>
         <div className="nav-links">
-          <Link to="/">Home</Link>
-          <a href="/#latest-blog" className="active">Blog</a>
-          <a href="/#contact">Contact</a>
+          <button type="button" id="navClose" aria-label="Close Navigation" onClick={() => setNavOpen(false)}>×</button>
+          <Link to="/" onClick={() => setNavOpen(false)}>Home</Link>
+          <a href="/#latest-blog" className="active" onClick={() => setNavOpen(false)}>Blog</a>
+          <a href="/#contact" onClick={() => setNavOpen(false)}>Contact</a>
           {role === 'admin' ? (
-            <Link to="/admin" style={{ color: 'var(--accent)', fontWeight: 600 }}>Admin Dashboard</Link>
+            <Link to="/admin" style={{ color: 'var(--accent)', fontWeight: 600 }} onClick={() => setNavOpen(false)}>Admin Dashboard</Link>
           ) : role === 'client' ? (
-            <Link to="/client" style={{ color: 'var(--accent)', fontWeight: 600 }}>My Project</Link>
+            <Link to="/client" style={{ color: 'var(--accent)', fontWeight: 600 }} onClick={() => setNavOpen(false)}>My Project</Link>
           ) : (
-            <Link to="/login" style={{ color: 'var(--accent)', fontWeight: 600 }}>Client Login</Link>
+            <Link to="/client/login" style={{ color: 'var(--accent)', fontWeight: 600 }} onClick={() => setNavOpen(false)}>Client Login</Link>
           )}
         </div>
       </nav>
