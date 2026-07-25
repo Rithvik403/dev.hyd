@@ -119,6 +119,21 @@ export async function submitContactForm(req, res, next) {
     // Asynchronously send notification email
     sendEnquiryNotification(enquiry).catch(err => console.error('Enquiry Email Error:', err))
 
+    // Asynchronously trigger n8n workflow if N8N_WEBHOOK_URL is defined
+    if (process.env.N8N_WEBHOOK_URL) {
+      fetch(process.env.N8N_WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'new_enquiry',
+          data: enquiry,
+          timestamp: new Date().toISOString()
+        })
+      })
+      .then(r => console.log('⚡ n8n Webhook triggered successfully:', r.status))
+      .catch(err => console.error('⚠️ n8n Webhook Error:', err.message))
+    }
+
     res.json({
       success: true,
       msg: "🎉 Got it! I'll WhatsApp you within 24 hours."

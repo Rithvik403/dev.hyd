@@ -1,0 +1,126 @@
+{
+  "name": "dev.hyd Lead & Project Automation Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "devhyd-enquiry",
+        "options": {}
+      },
+      "name": "Webhook - dev.hyd Enquiry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "devhyd-enquiry-webhook"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Extract payload from dev.hyd webhook\nconst body = $json.body || $json;\nconst enquiry = body.data || body;\n\nreturn {\n  json: {\n    event: body.event || 'new_enquiry',\n    name: enquiry.name || 'Anonymous',\n    business: enquiry.business || 'Not Provided',\n    phone: enquiry.phone || 'N/A',\n    email: enquiry.email || 'N/A',\n    service: enquiry.service || 'General Enquiry',\n    budget: enquiry.budget || 'Unspecified',\n    message: enquiry.message || 'No message attached',\n    timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })\n  }\n};"
+      },
+      "name": "Format Lead Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $env.TELEGRAM_CHAT_ID || '-100123456789' }}",
+        "text": "=🚀 *NEW WEBSITE ENQUIRY ON DEV.HYD* 🚀\n\n👤 *Client:* {{ $json.name }}\n🏢 *Business:* {{ $json.business }}\n📱 *Phone:* {{ $json.phone }}\n✉️ *Email:* {{ $json.email }}\n🛠️ *Service:* {{ $json.service }}\n💰 *Budget:* {{ $json.budget }}\n\n💬 *Message:* {{ $json.message }}\n\n⏰ *Time:* {{ $json.timestamp }}",
+        "additionalFields": {
+          "parse_mode": "Markdown"
+        }
+      },
+      "name": "Telegram Alert to Developer",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1,
+      "position": [
+        720,
+        180
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_credentials",
+          "name": "Telegram Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "dev.hyd.official@gmail.com",
+        "toEmail": "={{ $json.email }}",
+        "subject": "=🎉 Thanks for reaching out to dev.hyd, {{ $json.name }}!",
+        "html": "=<h2>Hi {{ $json.name }},</h2><p>Thank you for submitting an enquiry on <strong>dev.hyd</strong> for <strong>{{ $json.service }}</strong>!</p><p>I have received your details and will WhatsApp/call you on <strong>{{ $json.phone }}</strong> within 24 hours to discuss your website project and 2-day free demo.</p><br/><p>Best regards,<br/><strong>Rithvik</strong><br/>Lead Developer, dev.hyd</p>"
+      },
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{ $env.GOOGLE_SHEETS_ID }}",
+        "range": "Enquiries!A:G",
+        "options": {}
+      },
+      "name": "Save to Google Sheets CRM",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [
+        720,
+        420
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - dev.hyd Enquiry": {
+      "main": [
+        [
+          {
+            "node": "Format Lead Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Lead Payload": {
+      "main": [
+        [
+          {
+            "node": "Telegram Alert to Developer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save to Google Sheets CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {},
+  "tags": [
+    "dev.hyd",
+    "automation",
+    "crm"
+  ]
+}

@@ -296,7 +296,7 @@ export async function updateProject(req, res, next) {
 export async function addProjectTimelineUpdate(req, res, next) {
   const { status, note } = req.body
   try {
-    const project = await prisma.project.findUnique({ where: { id: req.params.id } })
+    const project = await prisma.project.findUnique({ where: { id: req.params.id }, include: { client: true } })
     if (!project) return res.status(404).json({ error: 'Project not found' })
 
     const updates = [...(project.updates || []), { status, note: note || '', date: new Date() }]
@@ -304,6 +304,30 @@ export async function addProjectTimelineUpdate(req, res, next) {
       where: { id: req.params.id },
       data: { status, updates }
     })
+
+    // Asynchronously trigger n8n workflow for project update
+    const n8nUrl = process.env.N8N_PROJECT_WEBHOOK_URL || process.env.N8N_WEBHOOK_URL
+    if (n8nUrl) {
+      fetch(n8nUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          event: 'project_status_update',
+          project: {
+            id: updatedProject.id,
+            title: updatedProject.title,
+            status: updatedProject.status,
+            clientName: project.client?.name,
+            clientEmail: project.client?.email,
+            latestNote: note || ''
+          },
+          timestamp: new Date().toISOString()
+        })
+      })
+      .then(r => console.log('⚡ n8n Project Webhook triggered:', r.status))
+      .catch(err => console.error('⚠️ n8n Project Webhook Error:', err.message))
+    }
+
     res.json({ success: true, project: updatedProject })
   } catch (error) {
     next(error)
