@@ -537,36 +537,21 @@ export default function ProjectTracker() {
                   /* Demo project — show fake method selector */
                   <div className="pay-method-content">
                     <div className="pay-methods-grid">
-                      <span className="pay-method-btn active"><span>⚡ UPI / GPay / PhonePe</span></span>
-                      <span className="pay-method-btn"><span>💳 Credit / Debit Card</span></span>
-                      <span className="pay-method-btn"><span>🏦 NetBanking</span></span>
+                      <span className="pay-method-btn active"><span>💳 Card / NetBanking / Wallet</span></span>
+                      <span className="pay-method-btn"><span>⚡ Instant Gateway</span></span>
                     </div>
                     <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '0.75rem' }}>
                       This is a <strong>demo project</strong>. No real payment will be charged.
                     </p>
                   </div>
                 ) : (
-                  /* Real project — Direct UPI QR & Razorpay Options */
-                  <div className="pay-method-content" style={{ textAlign: 'center' }}>
-                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1rem', marginBottom: '1rem' }}>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.5rem' }}>📱 Scan QR Code with GPay / PhonePe / Paytm</div>
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=7780252258@ybl&pn=dev.hyd&am=${selectedInstallment.amount}&cu=INR&tn=${encodeURIComponent(selectedInstallment.title)}`)}`}
-                        alt="UPI QR Code"
-                        style={{ width: '170px', height: '170px', borderRadius: '8px', margin: '0 auto', display: 'block', border: '1px solid #cbd5e1' }}
-                      />
-                      <div style={{ marginTop: '0.75rem', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
-                        UPI ID: <strong>7780252258@ybl</strong>
-                      </div>
-                    </div>
-
-                    <a
-                      href={`upi://pay?pa=7780252258@ybl&pn=dev.hyd&am=${selectedInstallment.amount}&cu=INR&tn=${encodeURIComponent(selectedInstallment.title)}`}
-                      className="btn btn-primary"
-                      style={{ width: '100%', padding: '0.65rem', fontSize: '0.88rem', marginBottom: '0.75rem', display: 'block', textDecoration: 'none', background: '#16a34a' }}
-                    >
-                      🚀 Open in GPay / PhonePe / Paytm →
-                    </a>
+                  /* Real project — Gateway Info */
+                  <div className="pay-method-content" style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🔐</div>
+                    <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Automated Payment Gateway</p>
+                    <p style={{ fontSize: '0.82rem', color: 'var(--muted)', margin: 0 }}>
+                      Supports Google Pay, PhonePe, Paytm, UPI, Cards & NetBanking with automated receipt generation.
+                    </p>
                   </div>
                 )}
 
@@ -579,11 +564,11 @@ export default function ProjectTracker() {
                     ? 'Opening Payment Gateway...'
                     : selectedInstallment.isDemo
                       ? `Simulate Payment ${formatINR(selectedInstallment.amount)} →`
-                      : `Pay ${formatINR(selectedInstallment.amount)} via Razorpay (UPI / Card) →`}
+                      : `Pay ${formatINR(selectedInstallment.amount)} via Razorpay →`}
                 </button>
 
                 <div className="pay-security-note">
-                  🔒 256-Bit SSL Encrypted • Powered by Razorpay & Instant UPI
+                  🔒 256-Bit SSL Encrypted • Powered by Razorpay
                 </div>
               </form>
 

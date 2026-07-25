@@ -11,10 +11,6 @@ function ProjectPaymentTab({ p, data, onRefresh }) {
   const [projPayments, setProjPayments] = useState(null)
   const [pmtProcessing, setPmtProcessing] = useState(false)
   const [activeModalPmt, setActiveModalPmt] = useState(null)
-  const [payTab, setPayTab] = useState('upi') // 'upi' or 'razorpay'
-  const [copiedUpi, setCopiedUpi] = useState(false)
-
-  const upiId = '7780252258@ybl'
 
   const formatINR = (val) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(val)
 
@@ -84,13 +80,6 @@ function ProjectPaymentTab({ p, data, onRefresh }) {
     }
   }
 
-  const copyUpiId = () => {
-    navigator.clipboard.writeText(upiId)
-    setCopiedUpi(true)
-    toast.success('UPI ID copied to clipboard! 📋')
-    setTimeout(() => setCopiedUpi(false), 3000)
-  }
-
   return (
     <div className="project-status-card" key={pId}>
       <h3>💳 Invoices & Payments</h3>
@@ -137,7 +126,7 @@ function ProjectPaymentTab({ p, data, onRefresh }) {
                     className="btn btn-primary"
                     style={{ padding: '0.35rem 1rem', fontSize: '0.8rem', background: 'var(--accent)', border: 'none' }}
                   >
-                    {pmtProcessing === pmt.id ? '...' : 'Pay Now (UPI / Card) →'}
+                    {pmtProcessing === pmt.id ? '...' : 'Pay Now →'}
                   </button>
                 )}
               </div>
@@ -157,115 +146,34 @@ function ProjectPaymentTab({ p, data, onRefresh }) {
         </div>
       )}
 
-      {/* UPI & GATEWAY PAYMENT MODAL */}
+      {/* GATEWAY PAYMENT MODAL */}
       {activeModalPmt && (
         <div className="pay-modal-backdrop" onClick={() => setActiveModalPmt(null)}>
           <div className="pay-modal-card" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '480px' }}>
             <button type="button" className="modal-close-btn" onClick={() => setActiveModalPmt(null)}>×</button>
 
-            <div className="pay-modal-head" style={{ marginBottom: '1rem' }}>
+            <div className="pay-modal-head" style={{ marginBottom: '1.25rem' }}>
               <span className="pay-sub-tag">SECURE MILESTONE PAYMENT</span>
               <h2 style={{ fontSize: '1.7rem', margin: '0.2rem 0' }}>Pay {formatINR(Number(activeModalPmt.amountDue))}</h2>
               <p className="pay-for-text">Milestone: <strong>{activeModalPmt.label}</strong></p>
             </div>
 
-            {/* Payment Method Tabs */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', marginBottom: '1.25rem', background: '#f1f5f9', padding: '0.3rem', borderRadius: '10px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🔐</div>
+              <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Automated Payment Gateway</p>
+              <p style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '1.25rem' }}>
+                Supports UPI, Google Pay, PhonePe, Paytm, Credit/Debit Cards & NetBanking with instant automated verification.
+              </p>
               <button
                 type="button"
-                onClick={() => setPayTab('upi')}
-                style={{
-                  padding: '0.6rem 0.5rem',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  border: 'none',
-                  borderRadius: '8px',
-                  background: payTab === 'upi' ? '#fff' : 'transparent',
-                  color: payTab === 'upi' ? 'var(--accent)' : '#64748b',
-                  boxShadow: payTab === 'upi' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
-                  cursor: 'pointer'
-                }}
+                onClick={() => handlePayRazorpay(activeModalPmt)}
+                disabled={pmtProcessing === activeModalPmt.id}
+                className="btn btn-primary"
+                style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem' }}
               >
-                📱 Instant UPI / QR
-              </button>
-              <button
-                type="button"
-                onClick={() => setPayTab('razorpay')}
-                style={{
-                  padding: '0.6rem 0.5rem',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  border: 'none',
-                  borderRadius: '8px',
-                  background: payTab === 'razorpay' ? '#fff' : 'transparent',
-                  color: payTab === 'razorpay' ? 'var(--accent)' : '#64748b',
-                  boxShadow: payTab === 'razorpay' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
-                  cursor: 'pointer'
-                }}
-              >
-                ⚡ Gateway (Razorpay)
+                {pmtProcessing === activeModalPmt.id ? 'Opening Gateway...' : `Pay ${formatINR(Number(activeModalPmt.amountDue))} via Razorpay →`}
               </button>
             </div>
-
-            {payTab === 'upi' ? (
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1rem', marginBottom: '1rem' }}>
-                  <div style={{ fontSize: '0.78rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.5rem' }}>Scan QR Code with GPay / PhonePe / Paytm</div>
-                  <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=${upiId}&pn=dev.hyd&am=${activeModalPmt.amountDue}&cu=INR&tn=${encodeURIComponent(activeModalPmt.label)}`)}`}
-                    alt="UPI Payment QR Code"
-                    style={{ width: '180px', height: '180px', borderRadius: '8px', margin: '0 auto', display: 'block', border: '1px solid #cbd5e1' }}
-                  />
-                  
-                  <div style={{ marginTop: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>UPI ID: <strong>{upiId}</strong></span>
-                    <button
-                      type="button"
-                      onClick={copyUpiId}
-                      className="btn btn-outline btn-sm"
-                      style={{ padding: '0.25rem 0.6rem', fontSize: '0.75rem', borderRadius: '6px' }}
-                    >
-                      {copiedUpi ? '✓ Copied' : '📋 Copy UPI ID'}
-                    </button>
-                  </div>
-                </div>
-
-                <a
-                  href={`upi://pay?pa=${upiId}&pn=dev.hyd&am=${activeModalPmt.amountDue}&cu=INR&tn=${encodeURIComponent(activeModalPmt.label)}`}
-                  className="btn btn-primary"
-                  style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem', marginBottom: '0.75rem', display: 'block', textDecoration: 'none', background: '#16a34a' }}
-                >
-                  🚀 Open in GPay / PhonePe / Paytm →
-                </a>
-
-                <a
-                  href={`https://wa.me/917780252258?text=${encodeURIComponent(`Hi dev.hyd! I am paying ${formatINR(Number(activeModalPmt.amountDue))} via UPI for milestone "${activeModalPmt.label}". Please verify.`)}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-outline"
-                  style={{ width: '100%', padding: '0.6rem', fontSize: '0.82rem', textDecoration: 'none', display: 'block' }}
-                >
-                  💬 Confirm Payment Receipt on WhatsApp
-                </a>
-              </div>
-            ) : (
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>🔐</div>
-                <p style={{ fontWeight: 600, marginBottom: '0.25rem' }}>Automated Gateway via Razorpay</p>
-                <p style={{ fontSize: '0.82rem', color: 'var(--muted)', marginBottom: '1.25rem' }}>
-                  Supports UPI, Google Pay, PhonePe, Paytm, Credit/Debit Cards & NetBanking with instant automated verification.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => handlePayRazorpay(activeModalPmt)}
-                  disabled={pmtProcessing === activeModalPmt.id}
-                  className="btn btn-primary"
-                  style={{ width: '100%', padding: '0.75rem', fontSize: '0.9rem' }}
-                >
-                  {pmtProcessing === activeModalPmt.id ? 'Opening Gateway...' : `Pay ${formatINR(Number(activeModalPmt.amountDue))} via Razorpay →`}
-                </button>
-              </div>
-            )}
           </div>
         </div>
       )}
