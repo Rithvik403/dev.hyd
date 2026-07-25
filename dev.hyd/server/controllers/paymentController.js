@@ -1,6 +1,8 @@
 import Razorpay from 'razorpay'
 import crypto from 'crypto'
 import prisma from '../prisma.js'
+import { emitSystemEvent, EVENTS } from '../events/eventEmitter.js'
+import { sendPaymentReceiptEmail } from '../emails/emailService.js'
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
@@ -33,6 +35,8 @@ export async function createOrder(req, res, next) {
       data: { razorpayOrderId: order.id },
     })
 
+    emitSystemEvent(EVENTS.PAYMENT_CREATED, { paymentId: payment.id, orderId: order.id, amount: payment.amountDue })
+
     res.json({
       order_id: order.id,
       amount: order.amount,
@@ -60,10 +64,14 @@ export async function verifyPayment(req, res, next) {
       .digest('hex')
 
     if (expectedSig !== razorpay_signature) {
+      emitSystemEvent(EVENTS.PAYMENT_FAILED, { payment_id, razorpay_order_id, error: 'Signature mismatch' })
       return res.status(400).json({ error: 'Payment verification failed: invalid signature' })
     }
 
-    const existing = await prisma.payment.findUnique({ where: { id: payment_id } })
+    const existing = await prisma.payment.findUnique({
+      where: { id: payment_id },
+      include: { client: true, project: true }
+    })
     if (!existing) return res.status(404).json({ error: 'Payment record not found' })
     if (existing.status === 'paid') return res.json({ success: true, alreadyPaid: true })
 
@@ -81,6 +89,20 @@ export async function verifyPayment(req, res, next) {
 
     // Recalculate project payment totals
     await recalcProjectPayments(payment.projectId)
+
+    // Emit event & Send Email
+    emitSystemEvent(EVENTS.PAYMENT_SUCCESS, {
+      paymentId: payment.id,
+      amount: payment.amountDue,
+      label: payment.label,
+      clientName: existing.client?.name,
+      clientEmail: existing.client?.email,
+      clientPhone: existing.client?.phone
+    })
+
+    if (existing.client) {
+      sendPaymentReceiptEmail(existing.client, payment).catch(() => {})
+    }
 
     res.json({ success: true, payment })
   } catch (error) {

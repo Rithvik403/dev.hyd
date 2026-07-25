@@ -74,11 +74,27 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 // 2. HEALTH CHECK ENDPOINTS (for Railway / Vercel Probes)
-const healthHandler = (req, res) => {
-  res.status(200).json({
-    status: 'ok',
+const healthHandler = async (req, res) => {
+  let dbStatus = 'healthy'
+  try {
+    const prisma = (await import('./prisma.js')).default
+    await prisma.$queryRaw`SELECT 1`
+  } catch (err) {
+    dbStatus = `unhealthy: ${err.message}`
+  }
+
+  res.status(dbStatus === 'healthy' ? 200 : 500).json({
+    status: dbStatus === 'healthy' ? 'ok' : 'degraded',
     environment: process.env.NODE_ENV || 'development',
-    uptime: Math.floor(process.uptime()),
+    uptimeSeconds: Math.floor(process.uptime()),
+    memoryUsageMB: Math.round(process.memoryUsage().rss / (1024 * 1024)),
+    services: {
+      database: dbStatus,
+      n8nAutomation: process.env.N8N_WEBHOOK_URL ? 'configured' : 'disabled',
+      whatsAppCloudApi: process.env.WHATSAPP_API_TOKEN ? 'configured' : 'disabled',
+      emailSmtp: process.env.SMTP_USER ? 'configured' : 'disabled',
+      storage: process.env.SUPABASE_URL ? 'supabase' : 'local'
+    },
     timestamp: new Date().toISOString()
   })
 }
