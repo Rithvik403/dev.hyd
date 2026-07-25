@@ -9,6 +9,11 @@ import {
   markNotificationsRead,
   backToAdmin
 } from '../controllers/clientController.js'
+import {
+  createOrder,
+  verifyPayment,
+  getProjectPayments
+} from '../controllers/paymentController.js'
 import { requireClient, requireAuth } from '../middleware/auth.js'
 import { upload } from '../middleware/upload.js'
 
@@ -25,5 +30,10 @@ router.post('/messages', requireClient, sendMessage)
 router.get('/messages', requireClient, getMessages)
 router.post('/profile', requireClient, updateProfile)
 router.post('/notifications/read', requireClient, markNotificationsRead)
+
+// Authenticated payment endpoints
+router.get('/payments/:projectId', requireClient, getProjectPayments)
+router.post('/payments/create-order', requireClient, createOrder)
+router.post('/payments/verify', requireClient, verifyPayment)
 
 export default router

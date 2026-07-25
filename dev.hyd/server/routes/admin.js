@@ -34,6 +34,12 @@ import {
   getSettings,
   updateSettings
 } from '../controllers/adminController.js'
+import {
+  adminCreateInstallment,
+  adminGetPayments,
+  adminDeleteInstallment,
+  adminMarkPaid
+} from '../controllers/paymentController.js'
 import { requireAdmin } from '../middleware/auth.js'
 import { upload } from '../middleware/upload.js'
 import { validateClient, validateBlogPost } from '../middleware/validation.js'
@@ -97,5 +103,11 @@ router.delete('/faqs/:id', deleteFAQ)
 // Settings
 router.get('/settings', getSettings)
 router.put('/settings', updateSettings)
+
+// Payment Management
+router.get('/payments/:projectId', adminGetPayments)
+router.post('/payments/:projectId/installments', adminCreateInstallment)
+router.delete('/payments/:id', adminDeleteInstallment)
+router.post('/payments/:id/mark-paid', adminMarkPaid)
 
 export default router

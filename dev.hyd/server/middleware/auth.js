@@ -13,10 +13,23 @@ export function signRefreshToken(payload) {
   return jwt.sign(payload, JWT_REFRESH_SECRET, { expiresIn: '7d' })
 }
 
+// Cookie configuration helper for cross-site (Vercel <-> Railway) compatibility
+export function getAuthCookieOptions(maxAge) {
+  const isProd = process.env.NODE_ENV === 'production'
+  const options = {
+    httpOnly: true,
+    secure: isProd,
+    sameSite: isProd ? 'none' : 'lax',
+    path: '/'
+  }
+  if (maxAge !== undefined) options.maxAge = maxAge
+  return options
+}
+
 // Clear cookies helper
 export function clearAuthCookies(res) {
-  res.clearCookie('accessToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' })
-  res.clearCookie('refreshToken', { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/' })
+  res.clearCookie('accessToken', getAuthCookieOptions())
+  res.clearCookie('refreshToken', getAuthCookieOptions())
 }
 
 // Authentication middleware
@@ -84,12 +97,7 @@ export async function requireAuth(req, res, next) {
       const newAccessToken = signAccessToken(newPayload)
 
       // Set new access token cookie
-      res.cookie('accessToken', newAccessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 15 * 60 * 1000 // 15 mins
-      })
+      res.cookie('accessToken', newAccessToken, getAuthCookieOptions(15 * 60 * 1000))
 
       req.user = newPayload
       req.session = req.session || {}
@@ -155,12 +163,7 @@ export async function attachUserIfPresent(req, res, next) {
           admin: decodedRefresh.admin || null
         }
         const newAccessToken = signAccessToken(newPayload)
-        res.cookie('accessToken', newAccessToken, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
-          path: '/'
-        })
+        res.cookie('accessToken', newAccessToken, getAuthCookieOptions(15 * 60 * 1000))
         req.user = newPayload
       }
     } catch (err) {

@@ -1,5 +1,5 @@
 import prisma from '../prisma.js'
-import { signAccessToken } from '../middleware/auth.js'
+import { signAccessToken, getAuthCookieOptions } from '../middleware/auth.js'
 import { uploadFileToStorage } from '../middleware/upload.js'
 
 // 1. GET CLIENT DASHBOARD
@@ -137,12 +137,7 @@ export function backToAdmin(req, res) {
 
     const accessToken = signAccessToken(payload)
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000 // 15 mins
-    })
+    res.cookie('accessToken', accessToken, getAuthCookieOptions(15 * 60 * 1000))
 
     return res.json({ success: true, redirect: '/admin' })
   }

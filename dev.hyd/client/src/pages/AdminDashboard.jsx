@@ -158,10 +158,22 @@ export default function AdminDashboard({ onLogout, onAdminEmulateClient }) {
 
   const handlePaymentChange = async (e, projectId) => {
     e.preventDefault()
+    const p = data?.projects?.find(item => (item.id || item._id) === projectId) || {}
     const paymentInfo = projectPayments[projectId] || {}
+
+    const totalVal = paymentInfo.total !== undefined ? Number(paymentInfo.total) : Number(p.paymentAmountTotal ?? p.payment_amount_total ?? 0)
+    const paidVal = paymentInfo.paid !== undefined ? Number(paymentInfo.paid) : Number(p.paymentAmountPaid ?? p.payment_amount_paid ?? 0)
+    const statusVal = paymentInfo.payment_status || p.paymentStatus || p.payment_status || 'Unpaid'
+
     try {
-      await adminApi.updatePayment(projectId, paymentInfo)
-      toast.success('Payment details updated')
+      await adminApi.updatePayment(projectId, {
+        payment_status: statusVal,
+        payment_amount_total: totalVal,
+        payment_amount_paid: paidVal,
+        total: totalVal,
+        paid: paidVal
+      })
+      toast.success('Payment details updated & synced to client portal')
       fetchDashboardData()
     } catch (err) {
       toast.error('Payment update failed')

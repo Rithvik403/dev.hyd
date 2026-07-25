@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs'
 import prisma from '../prisma.js'
-import { signAccessToken } from '../middleware/auth.js'
+import { signAccessToken, getAuthCookieOptions } from '../middleware/auth.js'
 import { uploadFileToStorage } from '../middleware/upload.js'
 
 // 1. DASHBOARD OVERVIEW DATA
@@ -57,12 +57,7 @@ export async function emulateClient(req, res, next) {
 
     const accessToken = signAccessToken(payload)
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000 // 15 mins
-    })
+    res.cookie('accessToken', accessToken, getAuthCookieOptions(15 * 60 * 1000))
 
     res.json({ success: true, redirect: '/client' })
   } catch (error) {
@@ -148,20 +143,56 @@ export async function deleteClient(req, res, next) {
 export async function createProject(req, res, next) {
   const { client_id, title, description, status, deadline, package: pkg, payment_status, payment_amount_total, payment_amount_paid } = req.body
   try {
+    if (!client_id) {
+      return res.status(400).json({ error: 'Please select or register a client for this project' })
+    }
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: 'Project title is required' })
+    }
+
+    const totalAmt = Number(payment_amount_total || 0)
+    const paidAmt = Number(payment_amount_paid || 0)
+    const calculatedStatus = payment_status || (paidAmt >= totalAmt && totalAmt > 0 ? 'Paid' : paidAmt > 0 ? 'Partially Paid' : 'Unpaid')
+
+    let deadlineDate = null
+    if (deadline) {
+      const d = new Date(deadline)
+      if (!isNaN(d.getTime())) {
+        deadlineDate = d
+      }
+    }
+
     const project = await prisma.project.create({
       data: {
         clientId: client_id,
-        title,
-        description,
+        title: title.trim(),
+        description: description ? description.trim() : null,
         status: status || 'Discovery',
-        deadline: deadline || null,
-        package: pkg,
-        paymentStatus: payment_status || 'Unpaid',
-        paymentAmountTotal: Number(payment_amount_total || 0),
-        paymentAmountPaid: Number(payment_amount_paid || 0),
+        deadline: deadlineDate,
+        package: pkg || null,
+        paymentStatus: calculatedStatus,
+        paymentAmountTotal: totalAmt,
+        paymentAmountPaid: paidAmt,
         updates: []
       }
     })
+
+    // Automatically create initial payment milestone installment if project has a payment total
+    if (totalAmt > 0) {
+      const isFullPaid = paidAmt >= totalAmt
+      await prisma.payment.create({
+        data: {
+          projectId: project.id,
+          clientId: client_id,
+          label: `Project Payment (${pkg || title})`,
+          amountDue: totalAmt,
+          amountPaid: paidAmt,
+          status: isFullPaid ? 'paid' : 'pending',
+          paidAt: isFullPaid ? new Date() : null
+        }
+      })
+    }
+
     res.json({ success: true, project })
   } catch (error) {
     next(error)
@@ -169,20 +200,56 @@ export async function createProject(req, res, next) {
 }
 
 export async function updateProject(req, res, next) {
-  const { title, description, deadline, package: pkg, status, payment_status, payment_amount_total, payment_amount_paid } = req.body
+  const { 
+    title, 
+    description, 
+    deadline, 
+    package: pkg, 
+    status, 
+    payment_status, 
+    paymentStatus,
+    payment_amount_total, 
+    paymentAmountTotal,
+    total,
+    payment_amount_paid, 
+    paymentAmountPaid,
+    paid 
+  } = req.body
+
   try {
     const existing = await prisma.project.findUnique({ where: { id: req.params.id } })
     if (!existing) return res.status(404).json({ error: 'Project not found' })
+
+    // Resolve payment status, total, and paid from any field naming convention
+    const newTotal = total !== undefined ? Number(total) : (payment_amount_total !== undefined ? Number(payment_amount_total) : (paymentAmountTotal !== undefined ? Number(paymentAmountTotal) : existing.paymentAmountTotal))
+    const newPaid = paid !== undefined ? Number(paid) : (payment_amount_paid !== undefined ? Number(payment_amount_paid) : (paymentAmountPaid !== undefined ? Number(paymentAmountPaid) : existing.paymentAmountPaid))
+    
+    let newStatus = payment_status || paymentStatus
+    if (!newStatus) {
+      if (newPaid >= newTotal && newTotal > 0) newStatus = 'Paid'
+      else if (newPaid > 0) newStatus = 'Partially Paid'
+      else newStatus = existing.paymentStatus || 'Unpaid'
+    }
+
+    let deadlineDate = existing.deadline
+    if (deadline !== undefined) {
+      if (deadline) {
+        const d = new Date(deadline)
+        deadlineDate = !isNaN(d.getTime()) ? d : null
+      } else {
+        deadlineDate = null
+      }
+    }
 
     const updates = [...(existing.updates || [])]
     const nextData = {
       title: title || existing.title,
       description: description !== undefined ? description : existing.description,
-      deadline: deadline !== undefined ? deadline : existing.deadline,
+      deadline: deadlineDate,
       package: pkg !== undefined ? pkg : existing.package,
-      paymentStatus: payment_status || existing.paymentStatus,
-      paymentAmountTotal: payment_amount_total !== undefined ? Number(payment_amount_total) : existing.paymentAmountTotal,
-      paymentAmountPaid: payment_amount_paid !== undefined ? Number(payment_amount_paid) : existing.paymentAmountPaid
+      paymentStatus: newStatus,
+      paymentAmountTotal: newTotal,
+      paymentAmountPaid: newPaid
     }
 
     if (status && status !== existing.status) {
@@ -192,6 +259,34 @@ export async function updateProject(req, res, next) {
     }
 
     const project = await prisma.project.update({ where: { id: req.params.id }, data: nextData })
+
+    // Sync or update payment installment breakdown
+    const existingPayments = await prisma.payment.findMany({ where: { projectId: project.id } })
+    if (existingPayments.length === 0 && newTotal > 0) {
+      await prisma.payment.create({
+        data: {
+          projectId: project.id,
+          clientId: project.clientId,
+          label: `Project Payment (${project.package || project.title})`,
+          amountDue: newTotal,
+          amountPaid: newPaid,
+          status: newPaid >= newTotal ? 'paid' : 'pending',
+          paidAt: newPaid >= newTotal ? new Date() : null
+        }
+      })
+    } else if (existingPayments.length === 1) {
+      const singlePmt = existingPayments[0]
+      await prisma.payment.update({
+        where: { id: singlePmt.id },
+        data: {
+          amountDue: newTotal,
+          amountPaid: newPaid,
+          status: newPaid >= newTotal ? 'paid' : (newPaid > 0 ? 'pending' : singlePmt.status),
+          paidAt: newPaid >= newTotal && !singlePmt.paidAt ? new Date() : singlePmt.paidAt
+        }
+      })
+    }
+
     res.json({ success: true, project })
   } catch (error) {
     next(error)

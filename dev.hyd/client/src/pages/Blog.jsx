@@ -70,7 +70,7 @@ export default function Blog() {
         ) : (
           <div className="blog-grid">
             {posts.map(post => (
-              <div className="blog-card" key={post._id}>
+              <div className="blog-card" key={post.id || post._id}>
                 {post.cover && (
                   <div style={{ height: '140px', overflow: 'hidden', borderRadius: '6px', marginBottom: '1rem' }}>
                     <img src={post.cover} alt={post.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />

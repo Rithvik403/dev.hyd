@@ -21,6 +21,9 @@ import publicRoutes from './routes/public.js'
 import clientRoutes from './routes/client.js'
 import adminRoutes from './routes/admin.js'
 
+// Import controllers
+import { razorpayWebhook } from './controllers/paymentController.js'
+
 // Import global error handler
 import errorHandler from './middleware/error.js'
 
@@ -55,6 +58,18 @@ app.use(cors({
 
 app.use(morgan('dev'))
 app.use(cookieParser())
+
+// RAZORPAY WEBHOOK — must be registered BEFORE express.json() to capture raw body
+app.post('/api/webhook/razorpay',
+  express.raw({ type: '*/*' }),
+  (req, res, next) => {
+    req.rawBody = req.body.toString()
+    try { req.body = JSON.parse(req.rawBody) } catch { req.body = {} }
+    next()
+  },
+  razorpayWebhook
+)
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 

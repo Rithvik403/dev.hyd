@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
 import prisma from '../prisma.js'
-import { signAccessToken, signRefreshToken, clearAuthCookies } from '../middleware/auth.js'
+import { signAccessToken, signRefreshToken, clearAuthCookies, getAuthCookieOptions } from '../middleware/auth.js'
 import nodemailer from 'nodemailer'
 
 // SMTP Transporter setup helper
@@ -64,8 +64,8 @@ export async function adminLogin(req, res, next) {
 
     let isMatch = await bcrypt.compare(cleanPassword, admin.password)
 
-    // Master password fallback for admin portal resilience
-    if (!isMatch && (cleanPassword === 'admin123' || cleanPassword === 'Admin123!' || cleanPassword === 'Rithvik@1909')) {
+    // Master password fallback ONLY in development mode
+    if (!isMatch && process.env.NODE_ENV !== 'production' && (cleanPassword === 'admin123' || cleanPassword === 'Admin123!')) {
       isMatch = true
       const newHash = await bcrypt.hash(cleanPassword, 10)
       await prisma.admin.update({
@@ -82,21 +82,8 @@ export async function adminLogin(req, res, next) {
     const accessToken = signAccessToken(payload)
     const refreshToken = signRefreshToken(payload)
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 15 * 60 * 1000 // 15 mins
-    })
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    })
+    res.cookie('accessToken', accessToken, getAuthCookieOptions(15 * 60 * 1000))
+    res.cookie('refreshToken', refreshToken, getAuthCookieOptions(7 * 24 * 60 * 60 * 1000))
 
     res.json({ success: true, user: payload, token: accessToken })
   } catch (error) {
@@ -123,7 +110,8 @@ export async function clientLogin(req, res, next) {
 
     let isMatch = await bcrypt.compare(cleanPassword, client.password)
 
-    if (!isMatch && (cleanPassword === 'Client123!' || cleanPassword === 'client123')) {
+    // Master password fallback ONLY in development mode
+    if (!isMatch && process.env.NODE_ENV !== 'production' && (cleanPassword === 'Client123!' || cleanPassword === 'client123')) {
       isMatch = true
       const newHash = await bcrypt.hash(cleanPassword, 10)
       await prisma.client.update({
@@ -140,21 +128,8 @@ export async function clientLogin(req, res, next) {
     const accessToken = signAccessToken(payload)
     const refreshToken = signRefreshToken(payload)
 
-    res.cookie('accessToken', accessToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 15 * 60 * 1000 // 15 mins
-    })
-
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    })
+    res.cookie('accessToken', accessToken, getAuthCookieOptions(15 * 60 * 1000))
+    res.cookie('refreshToken', refreshToken, getAuthCookieOptions(7 * 24 * 60 * 60 * 1000))
 
     res.json({ success: true, user: payload, token: accessToken })
   } catch (error) {

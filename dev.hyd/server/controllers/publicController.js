@@ -148,7 +148,23 @@ export async function trackProject(req, res, next) {
       return res.status(404).json({ error: 'Project not found' })
     }
 
-    res.json(project)
+    // Include payment installments for the Pay Now flow
+    const payments = await prisma.payment.findMany({
+      where: { projectId: project.id },
+      orderBy: { createdAt: 'asc' },
+      select: {
+        id: true,
+        label: true,
+        amountDue: true,
+        amountPaid: true,
+        status: true,
+        paidAt: true,
+        razorpayPaymentId: true,
+        createdAt: true
+      }
+    })
+
+    res.json({ ...project, payments })
   } catch (error) {
     next(error)
   }

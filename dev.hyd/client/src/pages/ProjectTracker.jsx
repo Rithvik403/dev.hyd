@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import toast from 'react-hot-toast'
 import { publicApi } from '../services/api'
+import { paymentApi } from '../services/api'
 
 // Sample active projects data with Financials & Milestone Installments
 const MOCK_PROJECTS = {
@@ -66,10 +67,10 @@ const MOCK_PROJECTS = {
 export default function ProjectTracker() {
   const [searchId, setSearchId] = useState('')
   const [activeProject, setActiveProject] = useState(MOCK_PROJECTS['DEV-8492'])
+  const [activeProjectRealId, setActiveProjectRealId] = useState(null) // actual DB UUID
   
   // Payment Modal states
   const [selectedInstallment, setSelectedInstallment] = useState(null)
-  const [payMethod, setPayMethod] = useState('upi')
   const [isProcessing, setIsProcessing] = useState(false)
   const [paymentSuccess, setPaymentSuccess] = useState(false)
 
@@ -93,33 +94,42 @@ export default function ProjectTracker() {
     try {
       const res = await publicApi.trackProject(query)
       const p = res.data
-      const totalCost = p.paymentTotal ?? p.payment_total ?? p.paymentAmountTotal ?? p.payment_amount_total ?? 8000
-      const totalPaid = p.paymentPaid ?? p.payment_paid ?? p.paymentAmountPaid ?? p.payment_amount_paid ?? 0
+      const totalCost = Number(p.paymentAmountTotal ?? p.payment_amount_total ?? 0)
+      const totalPaid = Number(p.paymentAmountPaid ?? p.payment_amount_paid ?? 0)
       const remainingBalance = Math.max(0, totalCost - totalPaid)
 
+      // Map real DB payments to installment format
+      const realPayments = p.payments || []
+      const installments = realPayments.length > 0
+        ? realPayments.map((pmt, idx) => ({
+            id: pmt.id, // real DB UUID for Pay Now
+            title: pmt.label,
+            amount: Number(pmt.amountDue),
+            status: pmt.status === 'paid' ? 'paid' : 'due',
+            date: pmt.paidAt ? new Date(pmt.paidAt).toLocaleDateString('en-IN') : 'Due Now',
+            receiptId: pmt.razorpayPaymentId ? `PAY-${pmt.razorpayPaymentId.slice(-6).toUpperCase()}` : null
+          }))
+        : [{ id: null, title: 'Total Project Cost', amount: totalCost, status: totalPaid >= totalCost ? 'paid' : 'due', date: 'Active' }]
+
+      setActiveProjectRealId(p.id) // store real UUID
       setActiveProject({
-        id: p.id || p._id || query,
-        clientName: p.client?.name || p.clientName || 'Client',
-        businessName: p.title || p.businessName || 'Project',
-        projectType: p.category || p.projectType || 'Web Development',
+        id: p.id || query,
+        clientName: p.client?.name || 'Client',
+        businessName: p.title || 'Project',
+        projectType: p.package || 'Web Development',
         startDate: p.createdAt ? new Date(p.createdAt).toLocaleDateString('en-IN') : 'Recent',
         estimatedCompletion: p.deadline ? new Date(p.deadline).toLocaleDateString('en-IN') : 'In Progress',
         progressPct: p.status === 'Delivered' ? 100 : p.status === 'Review' ? 85 : p.status === 'Development' ? 60 : 35,
         status: p.status || 'Active',
         latestUpdate: p.description || 'Project is under active development.',
-        financials: {
-          totalCost,
-          totalPaid,
-          remainingBalance,
-          installments: [
-            { id: 'inst-1', title: 'Total Project Cost', amount: totalCost, status: totalPaid >= totalCost ? 'paid' : 'due', date: 'Active' }
-          ]
-        },
-        milestones: p.milestones && p.milestones.length > 0 ? p.milestones : [
-          { id: 1, title: 'Project Initiated', status: 'completed', date: 'Done' },
-          { id: 2, title: 'Development & Build', status: p.status === 'Delivered' ? 'completed' : 'in-progress', date: 'Active' },
-          { id: 3, title: 'Final Handover & Launch', status: p.status === 'Delivered' ? 'completed' : 'upcoming', date: 'Pending' }
-        ]
+        financials: { totalCost, totalPaid, remainingBalance, installments },
+        milestones: p.updates && p.updates.length > 0
+          ? p.updates.map((u, i) => ({ id: i + 1, title: u.status, status: 'completed', date: new Date(u.date).toLocaleDateString('en-IN') }))
+          : [
+              { id: 1, title: 'Project Initiated', status: 'completed', date: 'Done' },
+              { id: 2, title: 'Development & Build', status: p.status === 'Delivered' ? 'completed' : 'in-progress', date: 'Active' },
+              { id: 3, title: 'Final Handover & Launch', status: p.status === 'Delivered' ? 'completed' : 'upcoming', date: 'Pending' }
+            ]
       })
       toast.success(`Loaded Project for "${query}"`)
     } catch (err) {
@@ -130,48 +140,151 @@ export default function ProjectTracker() {
   const loadDemo = (id) => {
     setSearchId(id)
     setActiveProject(MOCK_PROJECTS[id])
+    setActiveProjectRealId(null) // demo projects have no real UUID
     setSelectedInstallment(null)
     setPaymentSuccess(false)
   }
 
   const openPayModal = (installment) => {
+    // Demo projects use mock payment
+    if (!activeProjectRealId || installment.id === null || installment.id?.startsWith('inst-')) {
+      setSelectedInstallment({ ...installment, isDemo: true })
+      setPaymentSuccess(false)
+      return
+    }
     setSelectedInstallment(installment)
     setPaymentSuccess(false)
   }
 
-  const handleProcessPayment = (e) => {
+  // Load Razorpay checkout script dynamically
+  const loadRazorpayScript = () =>
+    new Promise((resolve) => {
+      if (document.getElementById('razorpay-script')) return resolve(true)
+      const script = document.createElement('script')
+      script.id = 'razorpay-script'
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js'
+      script.onload = () => resolve(true)
+      script.onerror = () => resolve(false)
+      document.body.appendChild(script)
+    })
+
+  const handleProcessPayment = async (e) => {
     e.preventDefault()
     setIsProcessing(true)
 
-    // Simulate instant payment gateway response (1.2s)
-    setTimeout(() => {
-      setIsProcessing(false)
-      setPaymentSuccess(true)
-      toast.success('Payment Received Successfully! Receipt Generated.')
+    // Demo mode — simulate payment
+    if (!activeProjectRealId || selectedInstallment?.isDemo) {
+      setTimeout(() => {
+        setIsProcessing(false)
+        setPaymentSuccess(true)
+        toast.success('Demo Payment Received! (Test Mode)')
+        if (selectedInstallment && activeProject) {
+          const updatedInstallments = activeProject.financials.installments.map(inst =>
+            inst.id === selectedInstallment.id
+              ? { ...inst, status: 'paid', date: 'Today', receiptId: `RCP-DEMO-${Math.floor(1000 + Math.random() * 9000)}` }
+              : inst
+          )
+          setActiveProject({
+            ...activeProject,
+            financials: {
+              ...activeProject.financials,
+              totalPaid: activeProject.financials.totalPaid + selectedInstallment.amount,
+              remainingBalance: Math.max(0, activeProject.financials.remainingBalance - selectedInstallment.amount),
+              installments: updatedInstallments
+            }
+          })
+        }
+      }, 1200)
+      return
+    }
 
-      // Update local state for demonstration
-      if (selectedInstallment && activeProject) {
-        const updatedInstallments = activeProject.financials.installments.map(inst => {
-          if (inst.id === selectedInstallment.id) {
-            return { ...inst, status: 'paid', date: 'Today', receiptId: `RCP-${activeProject.id}-${Math.floor(1000 + Math.random() * 9000)}` }
-          }
-          return inst
-        })
-
-        const newPaid = activeProject.financials.totalPaid + selectedInstallment.amount
-        const newRem = Math.max(0, activeProject.financials.totalCost - newPaid)
-
-        setActiveProject({
-          ...activeProject,
-          financials: {
-            ...activeProject.financials,
-            totalPaid: newPaid,
-            remainingBalance: newRem,
-            installments: updatedInstallments
-          }
-        })
+    // Real payment via Razorpay
+    try {
+      const loaded = await loadRazorpayScript()
+      if (!loaded) {
+        toast.error('Failed to load payment gateway. Check your internet connection.')
+        setIsProcessing(false)
+        return
       }
-    }, 1200)
+
+      const orderRes = await paymentApi.createOrder({
+        payment_id: selectedInstallment.id,
+        project_id: activeProjectRealId
+      })
+      const { order_id, amount, currency, key, payment_id } = orderRes.data
+
+      const options = {
+        key,
+        amount,
+        currency,
+        name: 'dev.hyd',
+        description: selectedInstallment.title,
+        order_id,
+        prefill: {
+          name: activeProject.clientName,
+          contact: activeProject.phone || ''
+        },
+        theme: { color: '#FF4D00' },
+        config: {
+          display: {
+            preferences: {
+              show_default_blocks: true
+            }
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsProcessing(false)
+            toast('Payment cancelled')
+          }
+        },
+        handler: async (response) => {
+          try {
+            await paymentApi.verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              payment_id
+            })
+            setIsProcessing(false)
+            setPaymentSuccess(true)
+            toast.success('Payment Successful! Receipt Generated.')
+
+            // Update UI state
+            const updatedInstallments = activeProject.financials.installments.map(inst =>
+              inst.id === selectedInstallment.id
+                ? { ...inst, status: 'paid', date: 'Today', receiptId: `PAY-${response.razorpay_payment_id.slice(-6).toUpperCase()}` }
+                : inst
+            )
+            setActiveProject({
+              ...activeProject,
+              financials: {
+                ...activeProject.financials,
+                totalPaid: activeProject.financials.totalPaid + selectedInstallment.amount,
+                remainingBalance: Math.max(0, activeProject.financials.remainingBalance - selectedInstallment.amount),
+                installments: updatedInstallments
+              }
+            })
+          } catch (err) {
+            setIsProcessing(false)
+            toast.error('Payment received but verification failed. Contact support.')
+          }
+        },
+        modal: {
+          ondismiss: () => {
+            setIsProcessing(false)
+            toast('Payment cancelled')
+          }
+        }
+      }
+
+      const rzp = new window.Razorpay(options)
+      rzp.open()
+      setIsProcessing(false) // reset — Razorpay handles its own loading state
+    } catch (err) {
+      setIsProcessing(false)
+      toast.error(err.response?.data?.error || 'Failed to initiate payment. Please try again.')
+    }
   }
 
   return (
@@ -417,76 +530,43 @@ export default function ProjectTracker() {
                 <div className="pay-modal-head">
                   <span className="pay-sub-tag">SECURE MILESTONE PAYMENT</span>
                   <h2>Pay {formatINR(selectedInstallment.amount)}</h2>
-                  <p className="pay-for-text">For: {selectedInstallment.title} (#{activeProject.id})</p>
+                  <p className="pay-for-text">For: {selectedInstallment.title} (#{activeProject.id?.slice(0, 8)}…)</p>
                 </div>
 
-                {/* Payment Method Tabs */}
-                <div className="pay-methods-grid">
-                  <button
-                    type="button"
-                    className={`pay-method-btn ${payMethod === 'upi' ? 'active' : ''}`}
-                    onClick={() => setPayMethod('upi')}
-                  >
-                    <span>⚡ UPI (GPay / PhonePe / Paytm)</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`pay-method-btn ${payMethod === 'card' ? 'active' : ''}`}
-                    onClick={() => setPayMethod('card')}
-                  >
-                    <span>💳 Credit / Debit Card</span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`pay-method-btn ${payMethod === 'netbanking' ? 'active' : ''}`}
-                    onClick={() => setPayMethod('netbanking')}
-                  >
-                    <span>🏦 NetBanking / Bank Transfer</span>
-                  </button>
-                </div>
-
-                {/* UPI Option Detail */}
-                {payMethod === 'upi' && (
+                {selectedInstallment.isDemo ? (
+                  /* Demo project — show fake method selector */
                   <div className="pay-method-content">
-                    <label className="pay-label">Enter VPA / UPI ID</label>
-                    <input
-                      type="text"
-                      placeholder="username@okaxis or 9876543210@ybl"
-                      required
-                      className="pay-input"
-                    />
-                    <span className="pay-hint">You will receive a payment request on your UPI app</span>
+                    <div className="pay-methods-grid">
+                      <span className="pay-method-btn active"><span>⚡ UPI / GPay / PhonePe</span></span>
+                      <span className="pay-method-btn"><span>💳 Credit / Debit Card</span></span>
+                      <span className="pay-method-btn"><span>🏦 NetBanking</span></span>
+                    </div>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--muted)', marginTop: '0.75rem' }}>
+                      This is a <strong>demo project</strong>. No real payment will be charged.
+                    </p>
                   </div>
-                )}
-
-                {/* Card Option Detail */}
-                {payMethod === 'card' && (
-                  <div className="pay-method-content">
-                    <label className="pay-label">Card Number</label>
-                    <input type="text" placeholder="4111 2222 3333 4444" required className="pay-input" />
-                    <div className="pay-row-2">
-                      <div>
-                        <label className="pay-label">Expiry</label>
-                        <input type="text" placeholder="MM/YY" required className="pay-input" />
-                      </div>
-                      <div>
-                        <label className="pay-label">CVV</label>
-                        <input type="password" placeholder="123" required className="pay-input" />
+                ) : (
+                  /* Real project — Direct UPI QR & Razorpay Options */
+                  <div className="pay-method-content" style={{ textAlign: 'center' }}>
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '1rem', marginBottom: '1rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', fontWeight: 700, marginBottom: '0.5rem' }}>📱 Scan QR Code with GPay / PhonePe / Paytm</div>
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`upi://pay?pa=7780252258@ybl&pn=dev.hyd&am=${selectedInstallment.amount}&cu=INR&tn=${encodeURIComponent(selectedInstallment.title)}`)}`}
+                        alt="UPI QR Code"
+                        style={{ width: '170px', height: '170px', borderRadius: '8px', margin: '0 auto', display: 'block', border: '1px solid #cbd5e1' }}
+                      />
+                      <div style={{ marginTop: '0.75rem', fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                        UPI ID: <strong>7780252258@ybl</strong>
                       </div>
                     </div>
-                  </div>
-                )}
 
-                {/* Bank Transfer Option Detail */}
-                {payMethod === 'netbanking' && (
-                  <div className="pay-method-content">
-                    <label className="pay-label">Select Your Bank</label>
-                    <select className="pay-input">
-                      <option>HDFC Bank</option>
-                      <option>ICICI Bank</option>
-                      <option>State Bank of India (SBI)</option>
-                      <option>Axis Bank</option>
-                    </select>
+                    <a
+                      href={`upi://pay?pa=7780252258@ybl&pn=dev.hyd&am=${selectedInstallment.amount}&cu=INR&tn=${encodeURIComponent(selectedInstallment.title)}`}
+                      className="btn btn-primary"
+                      style={{ width: '100%', padding: '0.65rem', fontSize: '0.88rem', marginBottom: '0.75rem', display: 'block', textDecoration: 'none', background: '#16a34a' }}
+                    >
+                      🚀 Open in GPay / PhonePe / Paytm →
+                    </a>
                   </div>
                 )}
 
@@ -495,13 +575,18 @@ export default function ProjectTracker() {
                   disabled={isProcessing}
                   className="pay-submit-btn"
                 >
-                  {isProcessing ? 'Processing Secure Payment...' : `Pay ${formatINR(selectedInstallment.amount)} Securely →`}
+                  {isProcessing
+                    ? 'Opening Payment Gateway...'
+                    : selectedInstallment.isDemo
+                      ? `Simulate Payment ${formatINR(selectedInstallment.amount)} →`
+                      : `Pay ${formatINR(selectedInstallment.amount)} via Razorpay (UPI / Card) →`}
                 </button>
 
                 <div className="pay-security-note">
-                  🔒 256-Bit SSL Encrypted • Powered by Razorpay / Bank Payment Gateway
+                  🔒 256-Bit SSL Encrypted • Powered by Razorpay & Instant UPI
                 </div>
               </form>
+
             ) : (
               <div className="pay-success-box text-center">
                 <div className="success-icon">✓</div>

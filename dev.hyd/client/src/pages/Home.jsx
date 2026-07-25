@@ -1097,7 +1097,7 @@ Looking forward to your response!`
         <div className="services-grid-new">
           {services.map((service, index) => (
             <div 
-              key={service._id}
+              key={service.id || service._id}
               className="service-card-new tilt-card" 
               data-reveal
               onMouseMove={(e) => {
@@ -1142,7 +1142,7 @@ Looking forward to your response!`
 
         <div className="faq-list">
           {faqs.map((faq, index) => (
-            <div data-reveal key={faq._id}>
+            <div data-reveal key={faq.id || faq._id}>
               <div className={`faq-item ${openFaq === index ? 'open' : ''}`}>
                 <button className="faq-question" onClick={() => setOpenFaq(openFaq === index ? null : index)}>
                   <span className="faq-num">{String(index + 1).padStart(2, '0')}</span>
@@ -1361,7 +1361,7 @@ Looking forward to your response!`
                     >
                       <option value="">Select a service...</option>
                       {services.map(s => (
-                        <option value={`${s.title} (${s.price})`} key={s._id}>
+                        <option value={`${s.title} (${s.price})`} key={s.id || s._id}>
                           {s.title} ({s.price})
                         </option>
                       ))}

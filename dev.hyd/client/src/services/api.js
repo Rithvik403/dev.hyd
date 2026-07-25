@@ -137,5 +137,24 @@ export const adminApi = {
   
   // Settings
   getSettings: () => apiClient.get('/admin/settings'),
-  updateSettings: (data) => apiClient.put('/admin/settings', data)
+  updateSettings: (data) => apiClient.put('/admin/settings', data),
+
+  // Admin Payment Management
+  adminGetPayments: (projectId) => apiClient.get(`/admin/payments/${projectId}`),
+  adminCreateInstallment: (projectId, data) => apiClient.post(`/admin/payments/${projectId}/installments`, data),
+  adminDeleteInstallment: (id) => apiClient.delete(`/admin/payments/${id}`),
+  adminMarkPaid: (id) => apiClient.post(`/admin/payments/${id}/mark-paid`),
 }
+
+// PAYMENT ENDPOINTS (Public — for ProjectTracker)
+export const paymentApi = {
+  createOrder: (data) => apiClient.post('/public/payments/create-order', data),
+  verifyPayment: (data) => apiClient.post('/public/payments/verify', data),
+  getProjectPayments: (projectId) => apiClient.get(`/public/payments/${projectId}`),
+
+  // Authenticated client payments (ClientDashboard)
+  clientCreateOrder: (data) => apiClient.post('/client/payments/create-order', data),
+  clientVerifyPayment: (data) => apiClient.post('/client/payments/verify', data),
+  clientGetPayments: (projectId) => apiClient.get(`/client/payments/${projectId}`),
+}
+
