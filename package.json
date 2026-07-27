@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "cd dev.hyd/server && npm install && npx prisma generate && npx prisma db push --accept-data-loss && node app.js",
+    "build": "cd dev.hyd/server && npm install && npx prisma generate",
     "install:all": "npm run install:all --prefix dev.hyd",
-    "dev": "npm run dev --prefix dev.hyd",
-    "build": "npm run build --prefix dev.hyd"
+    "dev": "npm run dev --prefix dev.hyd"
   }
 }
