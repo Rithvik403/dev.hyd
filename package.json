@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "cd dev.hyd/server && node app.js",
-    "build": "cd dev.hyd/server && npm install && npx prisma generate",
+    "start": "node dev.hyd/server/app.js",
+    "build": "npm --prefix dev.hyd/server install && npm --prefix dev.hyd/server run build",
     "install:all": "npm run install:all --prefix dev.hyd",
     "dev": "npm run dev --prefix dev.hyd"
   }
