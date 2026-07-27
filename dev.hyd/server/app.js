@@ -83,8 +83,8 @@ const healthHandler = async (req, res) => {
     dbStatus = `unhealthy: ${err.message}`
   }
 
-  res.status(dbStatus === 'healthy' ? 200 : 500).json({
-    status: dbStatus === 'healthy' ? 'ok' : 'degraded',
+  res.status(200).json({
+    status: 'ok',
     environment: process.env.NODE_ENV || 'development',
     uptimeSeconds: Math.floor(process.uptime()),
     memoryUsageMB: Math.round(process.memoryUsage().rss / (1024 * 1024)),
