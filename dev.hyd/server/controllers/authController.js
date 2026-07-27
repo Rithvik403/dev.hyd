@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import prisma from '../prisma.js'
 import { signAccessToken, signRefreshToken, clearAuthCookies, getAuthCookieOptions } from '../middleware/auth.js'
 import nodemailer from 'nodemailer'
+import { emitSystemEvent, EVENTS } from '../events/eventEmitter.js'
 
 // SMTP Transporter setup helper
 function getTransporter() {
@@ -85,6 +86,8 @@ export async function adminLogin(req, res, next) {
     res.cookie('accessToken', accessToken, getAuthCookieOptions(15 * 60 * 1000))
     res.cookie('refreshToken', refreshToken, getAuthCookieOptions(7 * 24 * 60 * 60 * 1000))
 
+    emitSystemEvent(EVENTS.ADMIN_LOGIN, { id: admin.id, email: admin.email, name: admin.name }, { userId: admin.id, userRole: 'admin' })
+
     res.json({ success: true, user: payload, token: accessToken })
   } catch (error) {
     next(error)
@@ -130,6 +133,8 @@ export async function clientLogin(req, res, next) {
 
     res.cookie('accessToken', accessToken, getAuthCookieOptions(15 * 60 * 1000))
     res.cookie('refreshToken', refreshToken, getAuthCookieOptions(7 * 24 * 60 * 60 * 1000))
+
+    emitSystemEvent(EVENTS.CLIENT_LOGIN, { id: client.id, email: client.email, name: client.name }, { userId: client.id, userRole: 'client' })
 
     res.json({ success: true, user: payload, token: accessToken })
   } catch (error) {
@@ -252,6 +257,8 @@ export async function resetPassword(req, res, next) {
         }
       })
     }
+
+    emitSystemEvent(EVENTS.PASSWORD_RESET, { email: user.email, role }, { userId: user.id, userRole: role })
 
     res.json({ success: true, message: 'Password has been successfully updated.' })
   } catch (error) {

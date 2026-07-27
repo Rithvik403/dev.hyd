@@ -64,6 +64,8 @@ model Project {
   invoices           Invoice[]
 
   @@index([clientId])
+  @@index([status])
+  @@index([clientId, status])
   @@map("projects")
 }
 
@@ -95,6 +97,7 @@ model Enquiry {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  @@index([status, createdAt])
   @@map("enquiries")
 }
 
@@ -214,6 +217,8 @@ model Payment {
 
   @@index([projectId])
   @@index([clientId])
+  @@index([status])
+  @@index([razorpayOrderId])
   @@map("payments")
 }
 
@@ -235,6 +240,7 @@ model Invoice {
 
   @@index([projectId])
   @@index([clientId])
+  @@index([status, dueDate])
   @@map("invoices")
 }
 
@@ -251,5 +257,6 @@ model ActivityLog {
 
   @@index([event])
   @@index([userId])
+  @@index([event, createdAt])
   @@map("activity_logs")
 }

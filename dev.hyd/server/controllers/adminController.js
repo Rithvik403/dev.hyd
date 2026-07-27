@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 import prisma from '../prisma.js'
 import { signAccessToken, getAuthCookieOptions } from '../middleware/auth.js'
 import { uploadFileToStorage } from '../middleware/upload.js'
+import { emitSystemEvent, EVENTS } from '../events/eventEmitter.js'
 
 // 1. DASHBOARD OVERVIEW DATA
 export async function getDashboardData(req, res, next) {
@@ -97,6 +98,9 @@ export async function createClient(req, res, next) {
     }
     const hash = await bcrypt.hash(password, 10)
     const client = await prisma.client.create({ data: { name, email: cleanEmail, phone, password: hash, verified: true } })
+
+    emitSystemEvent(EVENTS.CLIENT_CREATED, { id: client.id, name: client.name, email: client.email, phone: client.phone }, { userId: req.user.id, userRole: 'admin' })
+
     res.json({ success: true, client: { id: client.id, name: client.name, email: client.email } })
   } catch (error) {
     next(error)
@@ -122,6 +126,9 @@ export async function updateClient(req, res, next) {
     if (password) updateData.password = await bcrypt.hash(password, 10)
 
     const updatedClient = await prisma.client.update({ where: { id: client.id }, data: updateData })
+
+    emitSystemEvent(EVENTS.CLIENT_UPDATED, { id: updatedClient.id, name: updatedClient.name, email: updatedClient.email }, { userId: req.user.id, userRole: 'admin' })
+
     res.json({ success: true, client: updatedClient })
   } catch (error) {
     next(error)
@@ -193,6 +200,8 @@ export async function createProject(req, res, next) {
       })
     }
 
+    emitSystemEvent(EVENTS.PROJECT_CREATED, { id: project.id, title: project.title, status: project.status, clientId: project.clientId }, { userId: req.user.id, userRole: 'admin' })
+
     res.json({ success: true, project })
   } catch (error) {
     next(error)
@@ -252,6 +261,7 @@ export async function updateProject(req, res, next) {
       paymentAmountPaid: newPaid
     }
 
+    const isCompleted = status === 'Completed' || status === 'Live'
     if (status && status !== existing.status) {
       updates.push({ status, note: 'Status updated by Admin', date: new Date() })
       nextData.status = status
@@ -286,6 +296,9 @@ export async function updateProject(req, res, next) {
         }
       })
     }
+
+    const eventName = isCompleted ? EVENTS.PROJECT_COMPLETED : EVENTS.PROJECT_UPDATED
+    emitSystemEvent(eventName, { id: project.id, title: project.title, status: project.status, clientId: project.clientId }, { userId: req.user.id, userRole: 'admin' })
 
     res.json({ success: true, project })
   } catch (error) {

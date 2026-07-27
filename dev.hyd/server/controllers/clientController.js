@@ -1,6 +1,7 @@
 import prisma from '../prisma.js'
 import { signAccessToken, getAuthCookieOptions } from '../middleware/auth.js'
 import { uploadFileToStorage } from '../middleware/upload.js'
+import { emitSystemEvent, EVENTS } from '../events/eventEmitter.js'
 
 // 1. GET CLIENT DASHBOARD
 export async function getClientDashboard(req, res, next) {
@@ -61,6 +62,9 @@ export async function sendMessage(req, res, next) {
         text
       }
     })
+
+    emitSystemEvent(EVENTS.MESSAGE_SENT, { clientId: req.user.id, projectId: project_id, text }, { userId: req.user.id, userRole: 'client' })
+
     res.json({ success: true, message })
   } catch (error) {
     next(error)
@@ -85,12 +89,16 @@ export async function uploadClientFile(req, res, next) {
     if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
 
     const fileUrl = await uploadFileToStorage(req.file)
-    const nextFiles = [...(project.files || []), { name: req.body.name || req.file.originalname, url: fileUrl }]
+    const fileName = req.body.name || req.file.originalname
+    const nextFiles = [...(project.files || []), { name: fileName, url: fileUrl }]
 
     await prisma.project.update({
       where: { id: project.id },
       data: { files: nextFiles }
     })
+
+    emitSystemEvent(EVENTS.FILE_UPLOADED, { projectId: project.id, fileName, fileUrl }, { userId: req.user.id, userRole: 'client' })
+
     res.json({ success: true, file: nextFiles[nextFiles.length - 1] })
   } catch (error) {
     next(error)

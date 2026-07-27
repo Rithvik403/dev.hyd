@@ -1,0 +1,77 @@
+{
+  "name": "dev.hyd — Central Email Automation Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "email-automation",
+        "options": {}
+      },
+      "name": "Webhook - Email Request",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "webhookId": "email-automation-webhook"
+    },
+    {
+      "parameters": {
+        "content": "### ✉️ Central Email Router\n1. Receives transactional email trigger requests\n2. Formats branded HTML templates based on email type (password reset, invoice, welcome, completion)\n3. Dispatches via Gmail SMTP with retry logic",
+        "height": 220,
+        "width": 360
+      },
+      "name": "Sticky Note - Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 80]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const body = $json.body || $json;\nconst payload = body.data || body;\n\nreturn {\n  json: {\n    type: body.type || payload.type || 'general',\n    toEmail: payload.toEmail || payload.email,\n    subject: payload.subject || 'Notification from dev.hyd',\n    title: payload.title || 'dev.hyd Update',\n    bodyText: payload.message || payload.body || 'You have a new update on dev.hyd.',\n    actionUrl: payload.actionUrl || process.env.CLIENT_URL || 'http://localhost:5173'\n  }\n};"
+      },
+      "name": "Format Email Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "dev.hyd.official@gmail.com",
+        "toEmail": "={{ $json.toEmail }}",
+        "subject": "={{ $json.subject }}",
+        "html": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 12px;\">\n  <h2 style=\"color: #38bdf8;\">{{ $json.title }}</h2>\n  <p>{{ $json.bodyText }}</p>\n  <br/>\n  <a href=\"{{ $json.actionUrl }}\" style=\"display: inline-block; background: #38bdf8; color: #0f172a; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;\">View Details</a>\n</div>"
+      },
+      "name": "Send Transactional Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [720, 300],
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "options": { "responseCode": 200 },
+        "responseBody": "={ \"status\": \"sent\", \"to\": \"{{ $json.toEmail }}\" }"
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [940, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Email Request": {
+      "main": [[{ "node": "Format Email Context", "type": "main", "index": 0 }]]
+    },
+    "Format Email Context": {
+      "main": [[
+        { "node": "Send Transactional Email", "type": "main", "index": 0 },
+        { "node": "Respond to Webhook", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "1.0.0",
+  "tags": ["dev.hyd", "email-automation"]
+}

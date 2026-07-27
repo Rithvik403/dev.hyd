@@ -1,6 +1,7 @@
 import { marked } from 'marked'
 import prisma from '../prisma.js'
 import nodemailer from 'nodemailer'
+import { emitSystemEvent, EVENTS } from '../events/eventEmitter.js'
 
 // SMTP Transporter Helper
 function getTransporter() {
@@ -119,20 +120,8 @@ export async function submitContactForm(req, res, next) {
     // Asynchronously send notification email
     sendEnquiryNotification(enquiry).catch(err => console.error('Enquiry Email Error:', err))
 
-    // Asynchronously trigger n8n workflow if N8N_WEBHOOK_URL is defined
-    if (process.env.N8N_WEBHOOK_URL) {
-      fetch(process.env.N8N_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          event: 'new_enquiry',
-          data: enquiry,
-          timestamp: new Date().toISOString()
-        })
-      })
-      .then(r => console.log('⚡ n8n Webhook triggered successfully:', r.status))
-      .catch(err => console.error('⚠️ n8n Webhook Error:', err.message))
-    }
+    // Emit system event to trigger n8n workflows & activity logs
+    emitSystemEvent(EVENTS.CONTACT_CREATED, enquiry)
 
     res.json({
       success: true,

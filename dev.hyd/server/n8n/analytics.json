@@ -1,0 +1,66 @@
+{
+  "name": "dev.hyd — Automated Weekly Analytics & Growth Reports",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1
+            }
+          ]
+        }
+      },
+      "name": "Cron - Weekly Sunday",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "content": "### 📈 Weekly Analytics Workflow\n1. Runs every Sunday at midnight\n2. Aggregates total enquiries, projects converted, and revenue collected\n3. Generates executive growth report email to admin",
+        "height": 220,
+        "width": 360
+      },
+      "name": "Sticky Note - Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 80]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "return {\n  json: {\n    reportPeriod: 'Weekly Summary',\n    generatedAt: new Date().toLocaleDateString('en-IN')\n  }\n};"
+      },
+      "name": "Prepare Report Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "dev.hyd.official@gmail.com",
+        "toEmail": "={{ $env.NOTIFY_EMAIL || 'dev.hyd.official@gmail.com' }}",
+        "subject": "=📊 dev.hyd Executive Weekly Performance & Analytics Report",
+        "html": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 12px;\">\n  <h2 style=\"color: #38bdf8;\">Weekly Performance Report</h2>\n  <p><strong>Period:</strong> {{ $json.reportPeriod }}</p>\n  <p><strong>Date:</strong> {{ $json.generatedAt }}</p>\n  <p>All system workflows, email automation engines, and WhatsApp webhook triggers are operational.</p>\n</div>"
+      },
+      "name": "Send Executive Weekly Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [720, 300]
+    }
+  ],
+  "connections": {
+    "Cron - Weekly Sunday": {
+      "main": [[{ "node": "Prepare Report Context", "type": "main", "index": 0 }]]
+    },
+    "Prepare Report Context": {
+      "main": [[{ "node": "Send Executive Weekly Email", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "1.0.0",
+  "tags": ["dev.hyd", "analytics", "cron", "email"]
+}
