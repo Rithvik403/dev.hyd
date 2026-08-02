@@ -63,17 +63,7 @@ export async function adminLogin(req, res, next) {
       return res.status(401).json({ error: 'Invalid email or password' })
     }
 
-    let isMatch = await bcrypt.compare(cleanPassword, admin.password)
-
-    // Master password fallback ONLY in development mode
-    if (!isMatch && process.env.NODE_ENV !== 'production' && (cleanPassword === 'admin123' || cleanPassword === 'Admin123!')) {
-      isMatch = true
-      const newHash = await bcrypt.hash(cleanPassword, 10)
-      await prisma.admin.update({
-        where: { id: admin.id },
-        data: { password: newHash }
-      })
-    }
+    const isMatch = await bcrypt.compare(cleanPassword, admin.password)
 
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid email or password' })
@@ -111,17 +101,7 @@ export async function clientLogin(req, res, next) {
       return res.status(401).json({ error: 'Invalid email or password' })
     }
 
-    let isMatch = await bcrypt.compare(cleanPassword, client.password)
-
-    // Master password fallback ONLY in development mode
-    if (!isMatch && process.env.NODE_ENV !== 'production' && (cleanPassword === 'Client123!' || cleanPassword === 'client123')) {
-      isMatch = true
-      const newHash = await bcrypt.hash(cleanPassword, 10)
-      await prisma.client.update({
-        where: { id: client.id },
-        data: { password: newHash }
-      })
-    }
+    const isMatch = await bcrypt.compare(cleanPassword, client.password)
 
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid email or password' })

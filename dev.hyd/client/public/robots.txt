@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /blog/
+Allow: /track-project
+Disallow: /admin/
+Disallow: /client/
+Disallow: /api/
+
+Sitemap: https://devhyd.com/sitemap.xml

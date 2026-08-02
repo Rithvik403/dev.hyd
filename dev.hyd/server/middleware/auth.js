@@ -1,8 +1,9 @@
 import jwt from 'jsonwebtoken'
 import prisma from '../prisma.js'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-access-secret'
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret'
+const isProd = process.env.NODE_ENV === 'production'
+const JWT_SECRET = process.env.JWT_SECRET || (isProd ? (() => { throw new Error('FATAL: JWT_SECRET environment variable is missing!') })() : 'dev-access-secret-key-hyd-2026')
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || (isProd ? JWT_SECRET : 'dev-refresh-secret-key-hyd-2026')
 
 // Helper to sign tokens
 export function signAccessToken(payload) {

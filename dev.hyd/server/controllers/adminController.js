@@ -7,16 +7,35 @@ import { emitSystemEvent, EVENTS } from '../events/eventEmitter.js'
 // 1. DASHBOARD OVERVIEW DATA
 export async function getDashboardData(req, res, next) {
   try {
-    const enquiries = await prisma.enquiry.findMany({ orderBy: { createdAt: 'desc' } })
-    const newCount = enquiries.filter(e => e.status === 'new').length
-    const clients = await prisma.client.findMany({ orderBy: { createdAt: 'desc' } })
-    const projects = await prisma.project.findMany({ include: { client: { select: { name: true, email: true } } }, orderBy: { createdAt: 'desc' } })
-    const posts = await prisma.blogPost.findMany({ orderBy: { createdAt: 'desc' } })
-    const testimonials = await prisma.testimonial.findMany({ orderBy: { createdAt: 'desc' } })
-    const services = await prisma.service.findMany({ orderBy: { order: 'asc' } })
-    const galleryItems = await prisma.gallery.findMany({ orderBy: { createdAt: 'desc' } })
-    const faqs = await prisma.fAQ.findMany({ orderBy: { order: 'asc' } })
-    const settings = await prisma.websiteSettings.findUnique({ where: { key: 'global_settings' } }) || {}
+    const [
+      enquiries,
+      newCount,
+      enquiriesCount,
+      clients,
+      clientsCount,
+      projects,
+      projectsCount,
+      posts,
+      testimonials,
+      services,
+      galleryItems,
+      faqs,
+      settings
+    ] = await Promise.all([
+      prisma.enquiry.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }),
+      prisma.enquiry.count({ where: { status: 'new' } }),
+      prisma.enquiry.count(),
+      prisma.client.findMany({ orderBy: { createdAt: 'desc' }, take: 100 }),
+      prisma.client.count(),
+      prisma.project.findMany({ include: { client: { select: { name: true, email: true } } }, orderBy: { createdAt: 'desc' }, take: 100 }),
+      prisma.project.count(),
+      prisma.blogPost.findMany({ orderBy: { createdAt: 'desc' } }),
+      prisma.testimonial.findMany({ orderBy: { createdAt: 'desc' } }),
+      prisma.service.findMany({ orderBy: { order: 'asc' } }),
+      prisma.gallery.findMany({ orderBy: { createdAt: 'desc' } }),
+      prisma.fAQ.findMany({ orderBy: { order: 'asc' } }),
+      prisma.websiteSettings.findUnique({ where: { key: 'global_settings' } })
+    ])
 
     res.json({
       admin: req.user,
@@ -28,12 +47,12 @@ export async function getDashboardData(req, res, next) {
       services,
       galleryItems,
       faqs,
-      settings,
+      settings: settings || {},
       stats: {
-        enquiries: enquiries.length,
+        enquiries: enquiriesCount,
         newCount,
-        clients: clients.length,
-        projects: projects.length
+        clients: clientsCount,
+        projects: projectsCount
       }
     })
   } catch (error) {

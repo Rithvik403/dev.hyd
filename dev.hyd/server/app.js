@@ -14,6 +14,10 @@ import morgan from 'morgan'
 import cookieParser from 'cookie-parser'
 import { rateLimit } from 'express-rate-limit'
 import { initDB } from './db.js'
+import { validateEnvironment } from './utils/envCheck.js'
+
+// Execute Startup Environment Audit
+validateEnvironment()
 
 // Import routes
 import authRoutes from './routes/auth.js'
@@ -40,7 +44,9 @@ const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173'
 const allowedOrigins = [
   clientUrl,
   'http://localhost:5173',
-  'http://localhost:3000'
+  'http://localhost:3000',
+  'https://devhyd.com',
+  'https://www.devhyd.com'
 ]
 
 app.use(cors({
@@ -48,6 +54,9 @@ app.use(cors({
     // Allow requests with no origin (mobile apps, curl, Railway healthchecks)
     if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.endsWith('.railway.app')) {
       return callback(null, true)
+    }
+    if (process.env.NODE_ENV === 'production') {
+      return callback(new Error('CORS request blocked by production security policy'))
     }
     return callback(null, true)
   },
