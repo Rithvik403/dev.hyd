@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 export async function GET() {
   try {
     let [services, testimonials, blogPosts, gallery, faqs, settings] = await Promise.allSettled([
