@@ -6,7 +6,7 @@
   "main": "server/app.js",
   "scripts": {
     "start": "node server/app.js",
-    "build": "npx prisma generate --schema=server/prisma/schema.prisma",
+    "build": "prisma generate --schema=server/prisma/schema.prisma",
     "install:all": "npm run install:all --prefix dev.hyd",
     "dev": "npm run dev --prefix dev.hyd"
   },
@@ -27,9 +27,7 @@
     "morgan": "^1.10.0",
     "multer": "^2.0.1",
     "nodemailer": "^9.0.1",
+    "prisma": "^6.3.3",
     "razorpay": "^2.9.0"
-  },
-  "devDependencies": {
-    "prisma": "^6.3.3"
   }
 }
