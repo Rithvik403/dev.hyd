@@ -6,7 +6,7 @@ This document provides step-by-step instructions to deploy the **dev.hyd** web a
 
 ## 🏗️ Architecture Summary
 
-```
+```text
                  +-----------------------+
                  |    Client Browser     |
                  +-----------+-----------+
@@ -36,6 +36,7 @@ This document provides step-by-step instructions to deploy the **dev.hyd** web a
    - **Transaction Connection String (Pooled)**: Use as `DATABASE_URL`
    - **Direct Connection String**: Use as `DIRECT_URL`
 4. Run Prisma schema migration from your local machine:
+
    ```bash
    cd dev.hyd/server
    npx prisma db push
@@ -49,6 +50,7 @@ This document provides step-by-step instructions to deploy the **dev.hyd** web a
 2. Click **New Project -> Deploy from GitHub repo**.
 3. Select your repository and choose the `dev.hyd/server` directory.
 4. Set the following **Variables** in Railway settings:
+
    ```env
    PORT=3000
    NODE_ENV=production
@@ -61,6 +63,7 @@ This document provides step-by-step instructions to deploy the **dev.hyd** web a
    ADMIN_PASSWORD=admin123
    NOTIFY_EMAIL=dev.hyd.official@gmail.com
    ```
+
 5. **Default Admin Login Credentials**:
    - **Login URL**: `/admin/login`
    - **Email**: `dev.hyd.official@gmail.com`

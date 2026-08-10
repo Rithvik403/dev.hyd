@@ -6,7 +6,7 @@ This guide provides end-to-end documentation for the **dev.hyd** platform archit
 
 ## 🏗️ System Architecture Overview
 
-```
+```text
                          +-----------------------+
                          |     Client Browser    |
                          +-----------+-----------+
@@ -34,11 +34,12 @@ This guide provides end-to-end documentation for the **dev.hyd** platform archit
 
 All core business logic executes securely inside Express. When key actions occur, Express emits typed system events that asynchronously dispatch payloads to n8n webhooks for automations:
 
-```
+```text
 Contact Form Submitted -> Express Saves to DB -> Emits CONTACT_CREATED -> Dispatches to n8n Webhook -> WhatsApp Cloud API + Customer Email + Google Sheets CRM
 ```
 
-### Supported System Lifecycle Events:
+### Supported System Lifecycle Events
+
 1. `CONTACT_CREATED`: Website enquiry submitted.
 2. `CONTACT_UPDATED`: Lead status modified by admin.
 3. `CLIENT_CREATED`: Client account created in portal.
@@ -65,7 +66,7 @@ Contact Form Submitted -> Express Saves to DB -> Emits CONTACT_CREATED -> Dispat
 Import these ready-to-use n8n workflow JSON files into your n8n instance:
 
 | Workflow File | Description & Channels Used |
-|---|---|
+| :--- | :--- |
 | [`lead-management.json`](file:///c:/Users/Rithvik/OneDrive/Desktop/dev.hyd/dev.hyd/server/n8n/lead-management.json) | Webhook -> Validates enquiry -> WhatsApp Cloud API alert -> Auto-reply email -> Google Sheets CRM |
 | [`client-onboarding.json`](file:///c:/Users/Rithvik/OneDrive/Desktop/dev.hyd/dev.hyd/server/n8n/client-onboarding.json) | Webhook -> Sends portal credentials & welcome email -> WhatsApp onboarding alert |
 | [`project-management.json`](file:///c:/Users/Rithvik/OneDrive/Desktop/dev.hyd/dev.hyd/server/n8n/project-management.json) | Webhook -> Milestone update -> Client status email -> WhatsApp milestone alert |
@@ -82,6 +83,7 @@ Import these ready-to-use n8n workflow JSON files into your n8n instance:
 ## 📋 Comprehensive Deployment Checklists
 
 ### 1. 🚀 Production Deployment Checklist
+
 - [x] Environment variables defined in `.env` for production.
 - [x] Prisma database migrations generated and pushed (`npx prisma db push`).
 - [x] Rate limiting configured on `/api` routes (300 requests per 15 mins).
@@ -89,6 +91,7 @@ Import these ready-to-use n8n workflow JSON files into your n8n instance:
 - [x] Webhook signature verification active for Razorpay and n8n.
 
 ### 2. 🚂 Railway (Backend) Checklist
+
 - [x] Select `dev.hyd/server` as root directory.
 - [x] Set Environment Variables:
   - `PORT=3000`
@@ -104,6 +107,7 @@ Import these ready-to-use n8n workflow JSON files into your n8n instance:
 - [x] Verify `/health` endpoint returns HTTP 200 OK.
 
 ### 3. ⚡ Vercel (Frontend) Checklist
+
 - [x] Select `dev.hyd/client` as root directory.
 - [x] Framework preset: Vite.
 - [x] Build command: `npm run build`.
@@ -112,12 +116,14 @@ Import these ready-to-use n8n workflow JSON files into your n8n instance:
   - `VITE_API_BASE_URL=https://your-railway-backend.up.railway.app`
 
 ### 4. 🗄️ Supabase (PostgreSQL) Checklist
+
 - [x] Create project `dev.hyd` in Supabase.
 - [x] Copy Pooled Connection string to `DATABASE_URL`.
 - [x] Copy Direct Connection string to `DIRECT_URL`.
 - [x] Run `npx prisma db push` to push schema with performance composite indexes.
 
 ### 5. 🤖 n8n Checklist (WhatsApp & Email)
+
 - [x] Import all 10 workflow JSON files from `server/n8n/`.
 - [x] Set Environment Variables in n8n:
   - `WHATSAPP_API_TOKEN`
@@ -127,6 +133,7 @@ Import these ready-to-use n8n workflow JSON files into your n8n instance:
 - [x] Activate all workflows (toggle active switch).
 
 ### 6. 🧪 Testing Checklist
+
 - [x] **Enquiry Submission**: Submit contact form on landing page and verify:
   - Saved to PostgreSQL `Enquiry` table.
   - Event `CONTACT_CREATED` logged to `ActivityLog`.

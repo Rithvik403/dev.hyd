@@ -11,18 +11,21 @@
 ## 🌟 Key Features
 
 ### 🌐 Public Portfolio & Services
+
 - **Interactive Concept Calculator**: Instant price estimations & package recommendations.
 - **Dynamic Services & Testimonials**: Loaded directly from Supabase PostgreSQL database.
 - **Direct Mail & WhatsApp Actions**: One-click integration sending pre-filled lead details to Gmail Web Compose or WhatsApp.
 - **Public Project Tracker (`/track-project`)**: Live real-time project milestone tracking with search by Project ID or Client Email.
 
 ### 📊 Admin Portal (`/admin`)
+
 - **Full CRUD Management**: Manage Enquiries, Clients, Projects, Blog Posts, Services, Testimonials, FAQs, and Gallery Items.
 - **Integrated Client + Project Onboarding (`/admin/clients/new`)**: Single-step registration for clients with auto-generated project workspaces and balance calculations.
 - **Client Emulation Mode**: Admin can emulate client portal view and switch back seamlessly with one click.
 - **Financial Tracker**: Real-time total revenue, collected payments, and pending balance calculations.
 
 ### 👤 Client Portal (`/client`)
+
 - **Interactive Project Dashboard**: Project stage timeline, milestone tracking, file downloads, and messaging.
 - **Secure Password Reset & Profile Management**: Password updates with HttpOnly secure cookie authentication.
 
@@ -39,7 +42,7 @@
 
 ## 📁 Repository Structure
 
-```
+```text
 dev.hyd/
 ├── client/                     # Frontend React SPA
 │   ├── public/                 # Favicon and static branding assets
@@ -47,7 +50,7 @@ dev.hyd/
 │   │   ├── components/         # Reusable UI components (Sidebar, TopNav, Preloader, Calculator)
 │   │   ├── context/            # AuthContext (JWT & Emulation State)
 │   │   ├── pages/              # Page components (Home, Blog, Admin, Client, Tracker)
-│   │   ├── services/           # Axios API Client (`publicApi`, `authApi`, `clientApi`, `adminApi`)
+│   │   ├── services/           # Axios API Client (publicApi, authApi, clientApi, adminApi)
 │   │   └── index.css           # Global design tokens and component CSS
 │   ├── package.json
 │   ├── vercel.json             # Vercel Deployment Configuration
@@ -72,6 +75,7 @@ dev.hyd/
 ## 🚀 Getting Started Locally
 
 ### 1. Clone & Install Dependencies
+
 ```bash
 git clone https://github.com/your-username/dev.hyd.git
 cd dev.hyd
@@ -81,7 +85,9 @@ npm run install:all
 ```
 
 ### 2. Environment Setup
+
 Create `dev.hyd/server/.env` file:
+
 ```env
 PORT=3000
 NODE_ENV=development
@@ -98,12 +104,14 @@ ADMIN_PASSWORD=admin123!
 ```
 
 ### 3. Database Migration
+
 ```bash
 cd dev.hyd/server
 npx prisma db push
 ```
 
 ### 4. Run Development Servers
+
 ```bash
 # Run both Backend API (localhost:3000) and Frontend Vite (localhost:5173)
 npm run dev

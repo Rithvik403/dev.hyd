@@ -6,7 +6,7 @@ This document provides step-by-step instructions to deploy the **dev.hyd** web a
 
 ## 🏗️ Architecture Summary
 
-```
+```text
                  +-----------------------+
                  |    Client Browser     |
                  +-----------+-----------+
@@ -36,8 +36,9 @@ This document provides step-by-step instructions to deploy the **dev.hyd** web a
    - **Transaction Connection String (Pooled)**: Use as `DATABASE_URL`
    - **Direct Connection String**: Use as `DIRECT_URL`
 4. Run Prisma schema migration from your local machine:
+
    ```bash
-   cd server
+   cd dev.hyd/server
    npx prisma db push
    ```
 
@@ -47,8 +48,9 @@ This document provides step-by-step instructions to deploy the **dev.hyd** web a
 
 1. Sign in to [Railway](https://railway.app).
 2. Click **New Project -> Deploy from GitHub repo**.
-3. Select your repository and choose the `server/` directory (or use the root `railway.json`).
+3. Select your repository and choose the `dev.hyd/server` directory.
 4. Set the following **Variables** in Railway settings:
+
    ```env
    PORT=3000
    NODE_ENV=production
@@ -61,6 +63,7 @@ This document provides step-by-step instructions to deploy the **dev.hyd** web a
    ADMIN_PASSWORD=admin123
    NOTIFY_EMAIL=dev.hyd.official@gmail.com
    ```
+
 5. **Default Admin Login Credentials**:
    - **Login URL**: `/admin/login`
    - **Email**: `dev.hyd.official@gmail.com`
@@ -76,7 +79,7 @@ This document provides step-by-step instructions to deploy the **dev.hyd** web a
 
 1. Sign in to [Vercel](https://vercel.com).
 2. Click **Add New -> Project** and select your GitHub repository.
-3. Set **Root Directory** to `client` (or use root monorepo).
+3. Set **Root Directory** to `dev.hyd/client`.
 4. Build settings:
    - **Framework Preset**: Vite
    - **Build Command**: `npm run build`
@@ -85,13 +88,3 @@ This document provides step-by-step instructions to deploy the **dev.hyd** web a
    - `VITE_API_BASE_URL`: `https://your-railway-app.up.railway.app`
 6. Click **Deploy**.
 7. Vercel will build the React SPA and generate your live domain!
-
----
-
-## 🔄 4. Post-Deployment Verification
-
-1. Open your Vercel URL (e.g. `https://dev-hyd.vercel.app`).
-2. Test lead forms (WhatsApp / Gmail Compose actions).
-3. Test Admin Portal (`/admin/login`).
-4. Test Client Portal (`/client/login`).
-5. Test Public Project Tracker (`/track-project`).

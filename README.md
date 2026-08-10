@@ -19,23 +19,28 @@
 ## ⚡ Key System Features
 
 ### 1. Lead & Enquiry Management
+
 - Instant lead capture with anti-spam duplicate suppression (15-minute window check).
 - Automated customer confirmation emails via Nodemailer.
 - Real-time event dispatch to n8n for Telegram / WhatsApp alerts and Google Sheets CRM sync.
 
 ### 2. Client Management & Portal
+
 - Lead-to-Client conversion workflow.
 - Secure client dashboard with project timeline tracking, invoice payments, and design previews.
 
 ### 3. Project & Milestone Management
+
 - Real-time project tracker (`/track/:id`) with custom milestone updates and file uploads.
 - Event emission on milestone status change (`PROJECT_UPDATED`, `PROJECT_COMPLETED`).
 
 ### 4. Financial & Invoicing Engine
+
 - Razorpay order creation, payment signature verification, and automated payment receipts.
 - Automatic invoice generation (`INV-2026-XXXX`) with tax breakdown and due dates.
 
 ### 5. Health Monitoring & Backups
+
 - Diagnostic API endpoint (`GET /api/health`) monitoring database connectivity, memory usage, n8n webhook status, and service health.
 - Database backup snapshot runner (`node server/scripts/backup.js`).
 
@@ -82,4 +87,5 @@ npm run dev
 ---
 
 ## 📜 License
+
 Privately owned by **dev.hyd**. All rights reserved.
