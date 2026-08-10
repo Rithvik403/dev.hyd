@@ -3,9 +3,8 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  url      = "file:./devhyd.db"
 }
 
 model Admin {
@@ -52,11 +51,11 @@ model Project {
   status             String    @default("Discovery")
   deadline           DateTime?
   package            String?
-  updates            Json?     @default("[]")
-  files              Json?     @default("[]")
+  updates            String?   @default("[]")
+  files              String?   @default("[]")
   paymentStatus      String    @default("Unpaid") @map("payment_status")
-  paymentAmountTotal Decimal   @default(0) @map("payment_amount_total")
-  paymentAmountPaid  Decimal   @default(0) @map("payment_amount_paid")
+  paymentAmountTotal Float     @default(0) @map("payment_amount_total")
+  paymentAmountPaid  Float     @default(0) @map("payment_amount_paid")
   createdAt          DateTime  @default(now()) @map("created_at")
   updatedAt          DateTime  @updatedAt @map("updated_at")
   messages           Message[]
@@ -131,7 +130,7 @@ model Gallery {
   id        String   @id @default(uuid())
   title     String
   image     String
-  tags      Json?    @default("[]")
+  tags      String?  @default("[]")
   category  String?  @default("Website")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -157,9 +156,9 @@ model WebsiteSettings {
   seoTitle       String?  @default("dev.hyd — Web Development for Local Businesses in Hyderabad")
   seoDescription String?  @default("Helping Hyderabad businesses get more customers with modern websites, WhatsApp bookings, and Google Search visibility.")
   seoKeywords    String?  @default("web design Hyderabad, local business website, salon website, restaurant website")
-  socialLinks    Json?    @default("{}")
+  socialLinks    String?  @default("{}")
   logo           String?
-  customContent  Json?    @default("{}")
+  customContent  String?  @default("{}")
   createdAt      DateTime @default(now()) @map("created_at")
   updatedAt      DateTime @updatedAt @map("updated_at")
 
@@ -205,8 +204,8 @@ model Payment {
   clientId           String    @map("client_id")
   client             Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
   label              String
-  amountDue          Decimal   @map("amount_due")
-  amountPaid         Decimal   @default(0) @map("amount_paid")
+  amountDue          Float     @map("amount_due")
+  amountPaid         Float     @default(0) @map("amount_paid")
   status             String    @default("pending")
   razorpayOrderId    String?   @map("razorpay_order_id")
   razorpayPaymentId  String?   @map("razorpay_payment_id")
@@ -229,12 +228,12 @@ model Invoice {
   project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   clientId      String    @map("client_id")
   client        Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  amountTotal   Decimal   @map("amount_total")
-  amountTax     Decimal   @default(0) @map("amount_tax")
-  amountDue     Decimal   @map("amount_due")
+  amountTotal   Float     @map("amount_total")
+  amountTax     Float     @default(0) @map("amount_tax")
+  amountDue     Float     @map("amount_due")
   dueDate       DateTime? @map("due_date")
   status        String    @default("unpaid")
-  items         Json?     @default("[]")
+  items         String?   @default("[]")
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
@@ -252,7 +251,7 @@ model ActivityLog {
   description String
   ipAddress   String?  @map("ip_address")
   userAgent   String?  @map("user_agent")
-  metadata    Json?    @default("{}")
+  metadata    String?  @default("{}")
   createdAt   DateTime @default(now()) @map("created_at")
 
   @@index([event])

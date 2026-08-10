@@ -1,0 +1,66 @@
+{
+  "name": "dev.hyd — Daily Reminders & Scheduled Follow-ups",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 24
+            }
+          ]
+        }
+      },
+      "name": "Cron - Daily 9 AM IST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "content": "### ⏰ Daily Reminders & Cron Jobs\n1. Runs daily at 9:00 AM IST\n2. Queries backend /health or /api/admin/pending-reminders\n3. Triggers automated payment reminders & daily digest email",
+        "height": 220,
+        "width": 360
+      },
+      "name": "Sticky Note - Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 80]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.RAILWAY_URL || 'http://localhost:3000' }}/api/health",
+        "options": {}
+      },
+      "name": "Fetch Platform Health & Stats",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "dev.hyd.official@gmail.com",
+        "toEmail": "={{ $env.NOTIFY_EMAIL || 'dev.hyd.official@gmail.com' }}",
+        "subject": "=⏰ dev.hyd Morning Briefing & Health Digest",
+        "html": "=<div style=\"font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 12px;\">\n  <h2 style=\"color: #38bdf8;\">Morning Briefing — dev.hyd</h2>\n  <p><strong>Status:</strong> {{ $json.status }}</p>\n  <p><strong>Memory Usage:</strong> {{ $json.memoryUsageMB }} MB</p>\n  <p><strong>Uptime:</strong> {{ Math.floor($json.uptimeSeconds / 3600) }} hours</p>\n</div>"
+      },
+      "name": "Send Morning Briefing Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [720, 300]
+    }
+  ],
+  "connections": {
+    "Cron - Daily 9 AM IST": {
+      "main": [[{ "node": "Fetch Platform Health & Stats", "type": "main", "index": 0 }]]
+    },
+    "Fetch Platform Health & Stats": {
+      "main": [[{ "node": "Send Morning Briefing Email", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "1.0.0",
+  "tags": ["dev.hyd", "cron", "reminders", "email"]
+}

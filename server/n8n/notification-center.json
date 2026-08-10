@@ -1,0 +1,89 @@
+{
+  "name": "dev.hyd — Central Notification Center & Multi-channel Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "notification-center",
+        "options": {}
+      },
+      "name": "Webhook - Notification Event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "webhookId": "notification-center-webhook"
+    },
+    {
+      "parameters": {
+        "content": "### 🔔 Multi-channel Notification Center\n1. Central hub for real-time app notifications\n2. Dispatches WhatsApp Cloud API messages for client & admin updates\n3. Triggers Email notifications",
+        "height": 220,
+        "width": 360
+      },
+      "name": "Sticky Note - Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 80]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const body = $json.body || $json;\nconst data = body.data || body;\n\nreturn {\n  json: {\n    title: data.title || 'System Notification',\n    message: data.message || 'New activity logged',\n    clientPhone: data.phone || data.clientPhone || null,\n    clientEmail: data.email || data.clientEmail || null,\n    timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })\n  }\n};"
+      },
+      "name": "Process Notification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v18.0/{{ $env.WHATSAPP_PHONE_NUMBER_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.clientPhone }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"🔔 *{{ $json.title }}* 🔔\\n\\n{{ $json.message }}\\n⏰ {{ $json.timestamp }}\"\n  }\n}"
+      },
+      "name": "WhatsApp Notification",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [720, 200]
+    },
+    {
+      "parameters": {
+        "options": { "responseCode": 200 },
+        "responseBody": "={ \"status\": \"dispatched\" }"
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [940, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Notification Event": {
+      "main": [[{ "node": "Process Notification", "type": "main", "index": 0 }]]
+    },
+    "Process Notification": {
+      "main": [[
+        { "node": "WhatsApp Notification", "type": "main", "index": 0 },
+        { "node": "Respond to Webhook", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "1.0.0",
+  "tags": ["dev.hyd", "notifications", "whatsapp", "email"]
+}

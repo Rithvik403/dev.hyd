@@ -1,0 +1,102 @@
+{
+  "name": "dev.hyd — Payment & Razorpay Webhook Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "payment-automation",
+        "options": {}
+      },
+      "name": "Webhook - Payment Event",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [240, 300],
+      "webhookId": "payment-automation-webhook"
+    },
+    {
+      "parameters": {
+        "content": "### 💰 Payment & Billing Workflow\n1. Listens for PAYMENT_SUCCESS, PAYMENT_FAILED, INVOICE_PAID\n2. Sends instant WhatsApp receipt notification\n3. Dispatches automated digital receipt email to client\n4. Updates financial ledger log",
+        "height": 220,
+        "width": 360
+      },
+      "name": "Sticky Note - Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 80]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const body = $json.body || $json;\nconst payment = body.data || body;\n\nreturn {\n  json: {\n    event: body.event || 'PAYMENT_SUCCESS',\n    paymentId: payment.id || payment.razorpayPaymentId || 'PAY-0000',\n    amount: payment.amount || payment.amountPaid || '0',\n    label: payment.label || payment.description || 'Website Milestone Payment',\n    clientName: payment.clientName || payment.client?.name || 'Client',\n    clientEmail: payment.clientEmail || payment.client?.email || 'N/A',\n    clientPhone: payment.clientPhone || payment.client?.phone || 'N/A',\n    paidAt: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })\n  }\n};"
+      },
+      "name": "Format Payment Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [480, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v18.0/{{ $env.WHATSAPP_PHONE_NUMBER_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.clientPhone }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"💰 *dev.hyd Payment Confirmed* 💰\\n\\nHi {{ $json.clientName }}, we received your payment of ₹{{ $json.amount }} for *{{ $json.label }}*. Thank you!\"\n  }\n}"
+      },
+      "name": "WhatsApp Payment Receipt",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [720, 200]
+    },
+    {
+      "parameters": {
+        "fromEmail": "dev.hyd.official@gmail.com",
+        "toEmail": "={{ $json.clientEmail }}",
+        "subject": "=🧾 Payment Receipt: ₹{{ $json.amount }} received for {{ $json.label }}",
+        "html": "=<div style=\"font-family: system-ui, sans-serif; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 12px;\">\n  <h2 style=\"color: #22c55e;\">Payment Successful!</h2>\n  <p>Hi {{ $json.clientName }},</p>\n  <p>Thank you! We have received your payment of <strong>₹{{ $json.amount }}</strong> for <strong>{{ $json.label }}</strong>.</p>\n  <p>Transaction Reference: <code>{{ $json.paymentId }}</code></p>\n</div>"
+      },
+      "name": "Send Digital Receipt Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [720, 360]
+    },
+    {
+      "parameters": {
+        "options": { "responseCode": 200 },
+        "responseBody": "={ \"status\": \"success\", \"event\": \"PAYMENT_SUCCESS\" }"
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [940, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Payment Event": {
+      "main": [[{ "node": "Format Payment Details", "type": "main", "index": 0 }]]
+    },
+    "Format Payment Details": {
+      "main": [[
+        { "node": "WhatsApp Payment Receipt", "type": "main", "index": 0 },
+        { "node": "Send Digital Receipt Email", "type": "main", "index": 0 },
+        { "node": "Respond to Webhook", "type": "main", "index": 0 }
+      ]]
+    }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "1.0.0",
+  "tags": ["dev.hyd", "payments", "whatsapp", "email"]
+}

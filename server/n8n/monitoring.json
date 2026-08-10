@@ -1,0 +1,89 @@
+{
+  "name": "dev.hyd — Real-time Uptime & Server Monitoring",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "name": "Cron - Every 15 Mins",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "content": "### 🛡️ Real-Time System Monitoring\n1. Runs health check probe every 15 minutes\n2. Pings dev.hyd Railway API server /health endpoint\n3. Triggers IMMEDIATE email alert to admin if backend or database is degraded/offline",
+        "height": 220,
+        "width": 360
+      },
+      "name": "Sticky Note - Documentation",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [240, 80]
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.RAILWAY_URL || 'http://localhost:3000' }}/api/health",
+        "options": {}
+      },
+      "name": "Ping Backend Health Probe",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [480, 300],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "value2": "ok"
+            }
+          ]
+        }
+      },
+      "name": "Check Server Status",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [720, 300]
+    },
+    {
+      "parameters": {
+        "fromEmail": "dev.hyd.official@gmail.com",
+        "toEmail": "={{ $env.NOTIFY_EMAIL || 'dev.hyd.official@gmail.com' }}",
+        "subject": "=⚠️ ALERT: dev.hyd Backend Server Degraded or Offline!",
+        "html": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 12px; border: 2px solid #ef4444;\">\n  <h2 style=\"color: #ef4444;\">⚠️ SERVER DOWN WARNING</h2>\n  <p><strong>Status:</strong> {{ $json.status || 'UNREACHABLE' }}</p>\n  <p><strong>Error Details:</strong> {{ $json.error || 'Server did not respond to health check probe' }}</p>\n  <p><strong>Time:</strong> {{ new Date().toISOString() }}</p>\n</div>"
+      },
+      "name": "Send Server Down Alert Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [940, 420]
+    }
+  ],
+  "connections": {
+    "Cron - Every 15 Mins": {
+      "main": [[{ "node": "Ping Backend Health Probe", "type": "main", "index": 0 }]]
+    },
+    "Ping Backend Health Probe": {
+      "main": [[{ "node": "Check Server Status", "type": "main", "index": 0 }]]
+    },
+    "Check Server Status": {
+      "main": [
+        [],
+        [{ "node": "Send Server Down Alert Email", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "active": true,
+  "settings": { "executionOrder": "v1" },
+  "versionId": "1.0.0",
+  "tags": ["dev.hyd", "monitoring", "uptime", "email"]
+}

@@ -1,0 +1,331 @@
+{
+  "name": "dev.hyd Complete Website Automation Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "devhyd-webhook",
+        "options": {}
+      },
+      "name": "Webhook - dev.hyd Website Events",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "devhyd-webhook-trigger"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Parse incoming payload from dev.hyd backend\nconst raw = $json.body || $json;\nconst payload = raw.data || raw;\nconst eventName = raw.event || 'new_enquiry';\n\nconst now = new Date().toLocaleString('en-IN', {\n  timeZone: 'Asia/Kolkata',\n  dateStyle: 'medium',\n  timeStyle: 'short'\n});\n\nreturn {\n  json: {\n    event: eventName,\n    name: payload.name || 'Website Visitor',\n    business: payload.business || 'N/A',\n    phone: payload.phone || 'N/A',\n    email: payload.email || 'N/A',\n    service: payload.service || payload.title || 'General Enquiry',\n    budget: payload.budget || 'Unspecified',\n    message: payload.message || payload.note || 'No message provided',\n    status: payload.status || 'new',\n    amount: payload.amount || '0',\n    projectId: payload.projectId || payload.id || 'N/A',\n    timestamp: now\n  }\n};"
+      },
+      "name": "Normalize & Format Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "new_enquiry",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "CONTACT_CREATED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "LEAD_CREATED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "Lead/Enquiry"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "PROJECT_UPDATED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "PROJECT_COMPLETED",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "Project Update"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.event }}",
+                    "rightValue": "PAYMENT_SUCCESS",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "or"
+              },
+              "renameOutput": true,
+              "outputKey": "Payment Success"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "name": "Route Event Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v18.0/{{ $env.WHATSAPP_PHONE_NUMBER_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.phone }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"🔥 *dev.hyd New Enquiry Received* 🔥\\n\\nHi {{ $json.name }}, thank you for submitting your enquiry for *{{ $json.service }}*! We will reach out to you within 24 hours to set up your 2-day free demo.\"\n  }\n}"
+      },
+      "name": "WhatsApp Alert - Client & Admin",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        940,
+        140
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "dev.hyd.official@gmail.com",
+        "toEmail": "={{ $json.email }}",
+        "subject": "=🎉 Thank you for reaching out to dev.hyd, {{ $json.name }}!",
+        "html": "=<div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; color: #f8fafc; padding: 24px; border-radius: 12px;\">\n  <h2 style=\"color: #38bdf8; margin-top: 0;\">Hi {{ $json.name }},</h2>\n  <p>Thank you for submitting an enquiry on <strong>dev.hyd</strong> for <strong>{{ $json.service }}</strong>!</p>\n  <div style=\"background: #1e293b; padding: 16px; border-radius: 8px; border-left: 4px solid #38bdf8;\">\n    <p style=\"margin: 4px 0;\"><strong>Requested Service:</strong> {{ $json.service }}</p>\n    <p style=\"margin: 4px 0;\"><strong>Budget Range:</strong> {{ $json.budget }}</p>\n    <p style=\"margin: 4px 0;\"><strong>Contact Phone:</strong> {{ $json.phone }}</p>\n  </div>\n  <p>Our lead developer (Rithvik) will review your project details and get back to you within 24 hours to set up your <strong>2-Day Free Demo</strong>.</p>\n  <hr style=\"border-color: #334155; margin: 20px 0;\"/>\n  <p style=\"font-size: 12px; color: #94a3b8;\">dev.hyd — Web & Automation Engineering | Hyderabad</p>\n</div>"
+      },
+      "name": "Send Confirmation Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [
+        940,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "sheetId": "={{ $env.GOOGLE_SHEETS_ID }}",
+        "range": "Enquiries!A:G",
+        "options": {}
+      },
+      "name": "Save Lead to Google Sheets CRM",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 3,
+      "position": [
+        940,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v18.0/{{ $env.WHATSAPP_PHONE_NUMBER_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.phone }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"📊 *dev.hyd Project Update* 📊\\n\\nProject: {{ $json.service }}\\nStatus: {{ $json.status }}\\nTime: {{ $json.timestamp }}\"\n  }\n}"
+      },
+      "name": "WhatsApp Alert - Project Update",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        940,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.facebook.com/v18.0/{{ $env.WHATSAPP_PHONE_NUMBER_ID }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.WHATSAPP_API_TOKEN }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"messaging_product\": \"whatsapp\",\n  \"to\": \"{{ $json.phone }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": \"💰 *dev.hyd Payment Receipt* 💰\\n\\nHi {{ $json.name }}, we received your payment of ₹{{ $json.amount }}. Thank you for choosing dev.hyd!\"\n  }\n}"
+      },
+      "name": "WhatsApp Alert - Payment Success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        940,
+        700
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook - dev.hyd Website Events": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Format Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & Format Payload": {
+      "main": [
+        [
+          {
+            "node": "Route Event Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Event Type": {
+      "main": [
+        [
+          {
+            "node": "WhatsApp Alert - Client & Admin",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Send Confirmation Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Save Lead to Google Sheets CRM",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WhatsApp Alert - Project Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "WhatsApp Alert - Payment Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "1.0.0",
+  "meta": {
+    "instanceId": "devhyd-n8n-automation-instance"
+  },
+  "tags": [
+    "dev.hyd",
+    "website-automation",
+    "whatsapp",
+    "email"
+  ]
+}
