@@ -60,6 +60,7 @@ export default function AdminLogin() {
                 placeholder="admin@devhyd.com" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
+                autoComplete="username"
                 required 
                 autoFocus 
               />
@@ -75,6 +76,7 @@ export default function AdminLogin() {
                 placeholder="••••••••" 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
+                autoComplete="current-password"
                 required 
               />
               <button 
