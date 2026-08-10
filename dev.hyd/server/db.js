@@ -10,13 +10,8 @@ dotenv.config({ path: path.join(__dirname, '.env') })
 
 export async function initDB() {
   try {
-    if (!process.env.DATABASE_URL) {
-      console.warn('⚠️ DATABASE_URL is not configured. Prisma will not connect until it is set.')
-      return
-    }
-
     await prisma.$connect()
-    console.log('✅ Connected to PostgreSQL via Prisma')
+    console.log('✅ Database layer connected and ready')
 
     // Ensure Admin accounts are seeded and ready for login
     const adminPass = (process.env.ADMIN_PASSWORD || 'admin123').trim()
@@ -50,10 +45,10 @@ export async function initDB() {
 
     // Ensure Client accounts are seeded and ready for login
     const defaultClients = [
-      { name: 'Anjali Verma', email: 'anjali@salonstudio.com', phone: '9876543210', pass: 'Client123!' },
-      { name: 'Karthik Reddy', email: 'karthik@modernbistro.com', phone: '9876543211', pass: 'Client123!' },
-      { name: 'Neha Kapoor', email: 'neha@boutique.com', phone: '9876543212', pass: 'Client123!' },
-      { name: 'Dev Client', email: 'dev.hyd.official@gmail.com', phone: '7780252258', pass: 'Client123!' }
+      { name: 'Karthik Reddy', email: 'karthik@modernbistro.com', phone: '+91 98765 43210', pass: 'Client123!' },
+      { name: 'Anjali Verma', email: 'anjali@salonstudio.com', phone: '+91 98765 43211', pass: 'Client123!' },
+      { name: 'Neha Kapoor', email: 'neha@boutique.com', phone: '+91 98765 43212', pass: 'Client123!' },
+      { name: 'Dev Client', email: 'dev.hyd.official@gmail.com', phone: '+91 77802 52258', pass: 'Client123!' }
     ]
 
     for (const clientAcc of defaultClients) {
@@ -74,7 +69,7 @@ export async function initDB() {
       } else {
         await prisma.client.update({
           where: { email: cleanEmail },
-          data: { password: hash }
+          data: { password: hash, verified: true }
         })
       }
     }

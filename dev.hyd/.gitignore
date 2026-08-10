@@ -24,6 +24,10 @@ Thumbs.db
 .idea/
 *.swp
 
-# Server uploaded assets
+# Server uploaded assets & local data
 server/public/uploads/*
 !server/public/uploads/.gitkeep
+server/data/*
+!server/data/.gitkeep
+data/*
+!data/.gitkeep
