@@ -33,7 +33,11 @@ import errorHandler from './middleware/error.js'
 
 const app = express()
 
+// Trust reverse proxy (Railway, Vercel, Cloudflare) for accurate client IP identification
+app.set('trust proxy', 1)
+
 // 1. SECURITY & LOGGING MIDDLEWARE
+
 app.use(helmet({
   crossOriginResourcePolicy: false // Allows loading local uploaded images in front-end
 }))
@@ -163,10 +167,19 @@ app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')))
 // 4. RATE LIMITING
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 300, // Limit each IP to 300 requests per window
-  message: { error: 'Too many requests from this IP, please try again after 15 minutes' },
+  limit: 1000, // Limit each client IP to 1000 requests per window
+  skip: (req) => req.method === 'OPTIONS' || req.path === '/health' || req.path === '/api/health',
+  message: { error: 'Too many requests, please try again after a few moments' },
   standardHeaders: 'draft-7',
-  legacyHeaders: false
+  legacyHeaders: false,
+  handler: (req, res, _next, options) => {
+    const origin = req.headers.origin
+    if (origin) {
+      res.setHeader('Access-Control-Allow-Origin', origin)
+      res.setHeader('Access-Control-Allow-Credentials', 'true')
+    }
+    res.status(options.statusCode).json(options.message)
+  }
 })
 app.use('/api', limiter)
 
