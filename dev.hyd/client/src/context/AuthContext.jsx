@@ -57,7 +57,7 @@ export function AuthProvider({ children }) {
         return { success: true }
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.error || 'Login failed'
+      const errorMsg = err.response?.data?.error || (err.code === 'ERR_NETWORK' || !err.response ? 'Cannot connect to backend server. Make sure server is running on port 3000.' : 'Login failed')
       return { success: false, error: errorMsg }
     } finally {
       setLoading(false)
@@ -80,7 +80,7 @@ export function AuthProvider({ children }) {
         return { success: true }
       }
     } catch (err) {
-      const errorMsg = err.response?.data?.error || 'Login failed'
+      const errorMsg = err.response?.data?.error || (err.code === 'ERR_NETWORK' || !err.response ? 'Cannot connect to backend server. Make sure server is running on port 3000.' : 'Login failed')
       return { success: false, error: errorMsg }
     } finally {
       setLoading(false)

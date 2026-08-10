@@ -39,31 +39,78 @@ app.use(helmet({
 }))
 app.use(compression())
 
-// CORS configuration (supports credentials for HttpOnly cookie exchange)
+// CORS configuration (supports credentials for HttpOnly cookie exchange & all frontend domains)
 const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173'
 const allowedOrigins = [
   clientUrl,
   'http://localhost:5173',
   'http://localhost:3000',
+  'http://localhost:5174',
+  'http://localhost:5175',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000',
   'https://devhyd.com',
   'https://www.devhyd.com'
 ]
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, Railway healthchecks)
-    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('.vercel.app') || origin.endsWith('.railway.app')) {
+    // 1. Allow requests with no origin (mobile apps, curl, server-to-server, Railway healthchecks)
+    if (!origin) return callback(null, true)
+
+    // 2. Allow localhost and 127.0.0.1 on any port (Vite dev server ports 5173, 5174, etc.)
+    if (/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin)) {
       return callback(null, true)
     }
-    if (process.env.NODE_ENV === 'production') {
-      return callback(new Error('CORS request blocked by production security policy'))
+
+    // 3. Allow Vercel preview/production domains, Railway domains, and configured origins
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.vercel.app') ||
+      origin.endsWith('.railway.app') ||
+      origin.includes('devhyd.com')
+    ) {
+      return callback(null, true)
     }
+
+    // 4. In development, allow all origins
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true)
+    }
+
     return callback(null, true)
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}))
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH', 'HEAD'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+    'Cookie',
+    'Set-Cookie'
+  ],
+  exposedHeaders: ['Set-Cookie', 'Authorization'],
+  optionsSuccessStatus: 200
+}
+
+app.use(cors(corsOptions))
+
+// Redundant fallback header middleware to guarantee CORS headers on all responses (including errors)
+app.use((req, res, next) => {
+  const origin = req.headers.origin
+  if (origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+    res.setHeader('Access-Control-Allow-Credentials', 'true')
+  }
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH, HEAD')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Cookie, Set-Cookie')
+    return res.sendStatus(200)
+  }
+  next()
+})
 
 app.use(morgan('dev'))
 app.use(cookieParser())
