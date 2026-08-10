@@ -1,0 +1,149 @@
+'use client'
+
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import { authApi } from '../lib/api'
+
+const AuthContext = createContext(null)
+
+export function AuthProvider({ children }) {
+  const [user, setUser] = useState(null)
+  const [role, setRole] = useState(null)
+  const [adminViewing, setAdminViewing] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  // Verify auth on mount
+  const checkAuthStatus = async () => {
+    try {
+      const response = await authApi.getMe()
+      const { admin, client, adminViewing } = response.data
+      
+      if (admin) {
+        setUser(admin)
+        setRole('admin')
+        setAdminViewing(false)
+      } else if (client) {
+        setUser(client)
+        setRole('client')
+        setAdminViewing(adminViewing || false)
+      } else {
+        setUser(null)
+        setRole(null)
+        setAdminViewing(false)
+      }
+    } catch (err) {
+      setUser(null)
+      setRole(null)
+      setAdminViewing(false)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    checkAuthStatus()
+  }, [])
+
+  // Admin login handler
+  const loginAdmin = async (email, password) => {
+    setLoading(true)
+    try {
+      const response = await authApi.adminLogin({ email, password })
+      if (response.data.success) {
+        const adminUser = response.data.user
+        if (response.data.token) {
+          localStorage.setItem('auth_token', response.data.token)
+        }
+        setUser(adminUser)
+        setRole('admin')
+        setAdminViewing(false)
+        return { success: true }
+      }
+    } catch (err) {
+      const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      const fallbackMsg = isLocal
+        ? 'Cannot connect to backend server. Make sure server is running on port 3000.'
+        : 'Cannot connect to backend API server. Please check server status.'
+      const errorMsg = err.response?.data?.error || (err.code === 'ERR_NETWORK' || !err.response ? fallbackMsg : 'Login failed')
+      return { success: false, error: errorMsg }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Client login handler
+  const loginClient = async (email, password) => {
+    setLoading(true)
+    try {
+      const response = await authApi.clientLogin({ email, password })
+      if (response.data.success) {
+        const clientUser = response.data.user
+        if (response.data.token) {
+          localStorage.setItem('auth_token', response.data.token)
+        }
+        setUser(clientUser)
+        setRole('client')
+        setAdminViewing(false)
+        return { success: true }
+      }
+    } catch (err) {
+      const isLocal = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+      const fallbackMsg = isLocal
+        ? 'Cannot connect to backend server. Make sure server is running on port 3000.'
+        : 'Cannot connect to backend API server. Please check server status.'
+      const errorMsg = err.response?.data?.error || (err.code === 'ERR_NETWORK' || !err.response ? fallbackMsg : 'Login failed')
+      return { success: false, error: errorMsg }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Logout handler
+  const logout = async () => {
+    setLoading(true)
+    try {
+      localStorage.removeItem('auth_token')
+      await authApi.logout()
+    } catch (err) {
+      console.error('Logout error:', err)
+    } finally {
+      localStorage.removeItem('auth_token')
+      setUser(null)
+      setRole(null)
+      setAdminViewing(false)
+      setLoading(false)
+    }
+  }
+
+  // Emulation set auth
+  const setEmulatedClient = (clientData) => {
+    setUser(clientData)
+    setRole('client')
+    setAdminViewing(true)
+  }
+
+  const value = {
+    user,
+    role,
+    adminViewing,
+    loading,
+    loginAdmin,
+    loginClient,
+    logout,
+    checkAuthStatus,
+    setEmulatedClient
+  }
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+}

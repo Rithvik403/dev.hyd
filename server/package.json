@@ -6,13 +6,13 @@
   "type": "module",
   "scripts": {
     "start": "node app.js",
-    "build": "prisma generate",
+    "build": "npx --yes prisma@6.3.3 generate",
     "dev": "node --watch app.js",
     "migrate": "node scripts/migrate.js",
-    "prisma:generate": "prisma generate"
+    "prisma:generate": "npx --yes prisma@6.3.3 generate"
   },
   "dependencies": {
-    "@prisma/client": "^6.3.3",
+    "@prisma/client": "6.3.3",
     "@supabase/supabase-js": "^2.9.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
@@ -28,7 +28,7 @@
     "morgan": "^1.10.0",
     "multer": "^2.0.1",
     "nodemailer": "^9.0.1",
-    "prisma": "^6.3.3",
+    "prisma": "6.3.3",
     "razorpay": "^2.9.0"
   }
 }
